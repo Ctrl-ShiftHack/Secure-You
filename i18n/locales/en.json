@@ -1,0 +1,180 @@
+{
+  "settings": {
+    "title": "Settings & Privacy",
+    "manage": "Manage your account and preferences",
+    "profile": "Profile",
+    "appSettings": "App Settings",
+    "help": "Help & Support",
+    "helpCenter": "Help Center",
+    "logout": "Log Out",
+    "language": "Language",
+    "notifications": "Notifications",
+    "updateName": "Update Name",
+    "updatePassword": "Update Password",
+    "updatePhone": "Update Personal Number",
+    "updateAddress": "Update Present Address"
+  }
+  ,
+  "splash": {
+    "title": "SecureYou",
+    "subtitle": "Your safety, one tap away"
+  },
+  "onboarding": {
+    "skip": "Skip",
+    "next": "Next",
+    "getStarted": "Get Started",
+    "slides": [
+      { "title": "One-tap SOS help", "description": "Send emergency alerts instantly to your trusted contacts with a single tap" },
+      { "title": "Real-time location sharing", "description": "Share your live location with emergency contacts for immediate assistance" },
+      { "title": "Silent mode & privacy", "description": "Activate emergency mode discreetly when you need help without alerting others" }
+    ]
+  },
+  "login": {
+    "welcome": "Welcome Back",
+    "subtitle": "Sign in to your account",
+    "emailLabel": "Email or Phone Number",
+    "emailPlaceholder": "Enter your email or phone",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "continue": "Continue",
+    "orContinueWith": "Or Continue With",
+    "signupPrompt": "Don't have an account?",
+    "signup": "Sign up",
+    "skip": "Skip for view-only",
+    "errors": {
+      "fillFields": "Please fill in all fields",
+      "welcomeBackTitle": "Welcome back!",
+      "welcomeBackMsg": "You've successfully logged in"
+    }
+  },
+  "signup": {
+    "title": "Create Account",
+    "subtitle": "Join SecureYou Today",
+    "fullName": "Full Name",
+    "emailLabel": "Email or Phone Number",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "terms": "I agree to the terms and conditions and privacy policy",
+    "createAccount": "Create Account",
+    "alreadyHave": "Already have an account?",
+    "login": "Login",
+    "errors": {
+      "fillFields": "Please fill in all fields",
+      "passwordMismatch": "Passwords don't match",
+      "agreeTerms": "Please agree to terms and conditions",
+      "accountCreatedTitle": "Account created!",
+      "accountCreatedMsg": "Welcome to SecureYou"
+    }
+  },
+  "setup": {
+    "title": "Complete Your Profile",
+    "stepOf": "Step {step} of 3",
+    "fullName": "Full Name",
+    "personalNumber": "Personal Number",
+    "bloodGroup": "Blood Group (Optional)",
+    "presentAddress": "Present Address",
+    "permanentAddress": "Permanent Address",
+    "emergencyContact": "Emergency Contact",
+    "locationPermissionTitle": "Location Permission",
+    "locationPermissionDesc": "Allow location access for emergency services to find you quickly",
+    "back": "Back",
+    "completeSetup": "Complete Setup",
+    "continue": "Continue",
+    "setupCompleteTitle": "Setup Complete!",
+    "setupCompleteMsg": "Your profile is ready"
+  },
+  "dashboard": {
+    "greetingTitle": "Stay safe today",
+    "greetingSubtitle": "Your emergency contacts are ready to help",
+    "quickActions": "Quick Actions",
+    "currentLocation": "Current Location",
+    "viewMap": "View Map",
+    "mirpurDhaka": "Mirpur, Dhaka, Bangladesh",
+    "safe": "Safe",
+    "sosSent": "SOS SENT",
+    "sosSentDescription": "Emergency contacts have been notified",
+    "alertCancelledTitle": "Alert Cancelled",
+    "alertCancelledMsg": "Emergency status cleared",
+    "recentIncidents": "Recent Incidents"
+  },
+  "incidents": {
+    "title": "Recent Incidents",
+    "subtitle": "Share incidents you faced",
+  "upload": "Upload Photo",
+  "uploaded": "Photo uploaded",
+  "uploadedDesc": "Your photo is ready to share",
+    "placeholder": "Describe what happened...",
+    "share": "Share",
+    "noIncidents": "No incidents yet. Share your first one.",
+    "like": "Like",
+    "comment": "Comment",
+    "shareAction": "Share",
+    "edit": "Edit Post",
+    "copyLink": "Copy Link",
+    "linkCopied": "Link copied to clipboard",
+    "copyFailed": "Failed to copy link",
+    "delete": "Delete",
+    "deleteConfirm": "Are you sure you want to delete this post? This action cannot be undone.",
+    "cancel": "Cancel"
+    ,
+    "deletedDesc": "Post deleted",
+    "deleteFailed": "Failed to delete post",
+    "editing": "Editing is not implemented yet",
+    "noIncidentsDesc": "We couldn't find that incident."
+    ,
+    "errorNoContent": "Please add text or a photo before sharing."
+  },
+  "contacts": {
+    "title": "Emergency Contacts",
+    "subtitle": "Manage your trusted contacts",
+    "yourContacts": "Your Contacts",
+    "addNew": "Add New",
+    "governmentHelpline": "Government Helpline",
+    "call": "Call"
+  },
+  "help": {
+    "title": "Help & Support",
+    "tutorials": "Tutorials",
+    "faqTitle": "Frequently Asked Questions",
+    "howItWorks": "How does SOS work?",
+    "isLocationShared": "Is my location shared automatically?",
+    "contactUs": "Contact Us",
+    "emailSupport": "Email Support",
+    "liveChat": "Live Chat",
+    "available247": "Available 24/7",
+    "feedbackTitle": "Share Your Feedback",
+    "feedbackDesc": "Help us improve SecureYou with your suggestions",
+    "giveFeedback": "Give Feedback"
+  },
+  "silent": {
+    "title": "Silent Mode",
+    "activeTitle": "Silent Mode Active",
+    "inactiveTitle": "Silent Mode Inactive",
+    "activeDesc": "Your emergency alerts will be sent discreetly",
+    "inactiveDesc": "Activate to send alerts without obvious notifications",
+    "enableLabel": "Enable Silent Mode",
+    "howItWorks": "How it works",
+    "shakeToAlert": "Shake to Alert",
+    "shakeDesc": "Shake your phone to trigger SOS without touching the screen",
+    "disguiseMode": "Disguise Mode",
+    "disguiseDesc": "App appears as a notes app when others look at your screen",
+    "testTrigger": "Test Shake Trigger",
+    "testDesc": "Test the shake trigger to ensure it works when you need it"
+  },
+  "map": {
+    "title": "Live Location Tracking",
+    "subtitle": "Real-time location sharing",
+    "yourCurrentLocation": "Your Current Location",
+    "shareLiveLocation": "Share Live Location",
+    "locationSharedTitle": "Location Shared",
+    "locationSharedMsg": "Your live location has been shared with emergency contacts",
+    "locationUpdatedTitle": "Location Updated",
+    "locationUpdatedMsg": "Your current location has been refreshed",
+    "locationActive": "Location Active",
+    "lastUpdated": "Last updated: Just now"
+  },
+  "notfound": {
+    "oops": "Oops! Page not found",
+    "returnHome": "Return to Home"
+  }
+}
