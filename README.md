@@ -1,6 +1,6 @@
 # SecureYou Alert System
 
-A React-based personal safety and emergency alert system built with modern web technologies.
+A React-based personal safety and emergency alert system built with modern web technologies and Supabase backend.
 
 ## Features
 
@@ -8,8 +8,11 @@ A React-based personal safety and emergency alert system built with modern web t
 - 👥 Emergency Contacts Management
 - 📍 Location Tracking
 - 🚨 Incident Reporting
-- 🔐 Secure Authentication
+- 🔐 Secure Authentication (Email/Password)
+- 👤 User Profile Management
 - 🌐 Progressive Web App (PWA)
+- 🗄️ Supabase Database Integration
+- 🌍 Multi-language Support (EN, ES, BN)
 
 ## Tech Stack
 
@@ -19,6 +22,8 @@ A React-based personal safety and emergency alert system built with modern web t
 - TailwindCSS
 - Shadcn/ui
 - React Router
+- Supabase (Database & Authentication)
+- TanStack React Query
 
 ## Prerequisites
 
@@ -26,13 +31,14 @@ Before you begin, ensure you have installed:
 - [Node.js](https://nodejs.org/) (v16 or newer)
 - [npm](https://www.npmjs.com/) (v7 or newer)
 - [Git](https://git-scm.com/)
+- A [Supabase](https://supabase.com/) account
 
 ## Installation
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/mdnhsiam/secure-you-alert-main.git
-   cd secure-you-alert-main
+   git clone https://github.com/Ctrl-ShiftHack/Secure-You.git
+   cd Secure-You
    ```
 
 2. Install dependencies:
@@ -44,9 +50,17 @@ Before you begin, ensure you have installed:
    ```bash
    cp .env.example .env
    ```
-   Then edit .env with your configuration.
+   Then edit `.env` with your Supabase credentials:
+   ```
+   VITE_SUPABASE_URL=your_supabase_project_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
-4. Start the development server:
+4. Set up Supabase database:
+   - See `SUPABASE_SETUP.md` for detailed instructions
+   - Run the SQL migration in `supabase-migration.sql` in your Supabase SQL Editor
+
+5. Start the development server:
    ```bash
    npm run dev
    ```
