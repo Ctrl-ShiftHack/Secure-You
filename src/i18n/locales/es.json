@@ -1,0 +1,175 @@
+{
+  "settings": {
+    "title": "Configuración y privacidad",
+    "manage": "Administra tu cuenta y preferencias",
+    "profile": "Perfil",
+    "appSettings": "Configuración de la aplicación",
+    "help": "Ayuda y soporte",
+    "helpCenter": "Centro de ayuda",
+    "logout": "Cerrar sesión",
+    "language": "Idioma",
+    "notifications": "Notificaciones",
+    "updateName": "Actualizar nombre",
+    "updatePassword": "Actualizar contraseña",
+    "updatePhone": "Actualizar número personal",
+    "updateAddress": "Actualizar dirección actual"
+  }
+  ,
+  "splash": {
+    "title": "SecureYou",
+    "subtitle": "Tu seguridad, a un toque de distancia"
+  },
+  "onboarding": {
+    "skip": "Saltar",
+    "next": "Siguiente",
+    "getStarted": "Comenzar",
+    "slides": [
+      { "title": "Ayuda SOS con un toque", "description": "Envía alertas de emergencia instantáneamente a tus contactos de confianza con un solo toque" },
+      { "title": "Compartir ubicación en tiempo real", "description": "Comparte tu ubicación en vivo con contactos de emergencia para asistencia inmediata" },
+      { "title": "Modo silencioso y privacidad", "description": "Activa el modo de emergencia discretamente cuando necesites ayuda sin alertar a otros" }
+    ]
+  },
+  "login": {
+    "welcome": "Bienvenido de nuevo",
+    "subtitle": "Inicia sesión en tu cuenta",
+    "emailLabel": "Correo o número de teléfono",
+    "emailPlaceholder": "Introduce tu correo o teléfono",
+    "passwordLabel": "Contraseña",
+    "passwordPlaceholder": "Introduce tu contraseña",
+    "continue": "Continuar",
+    "orContinueWith": "O continúa con",
+    "signupPrompt": "¿No tienes una cuenta?",
+    "signup": "Regístrate",
+    "skip": "Saltar para ver solo",
+    "errors": {
+      "fillFields": "Por favor completa todos los campos",
+      "welcomeBackTitle": "¡Bienvenido de nuevo!",
+      "welcomeBackMsg": "Has iniciado sesión correctamente"
+    }
+  },
+  "signup": {
+    "title": "Crear cuenta",
+    "subtitle": "Únete a SecureYou hoy",
+    "fullName": "Nombre completo",
+    "emailLabel": "Correo o número de teléfono",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "terms": "Acepto los términos y la política de privacidad",
+    "createAccount": "Crear cuenta",
+    "alreadyHave": "¿Ya tienes una cuenta?",
+    "login": "Iniciar sesión",
+    "errors": {
+      "fillFields": "Por favor completa todos los campos",
+      "passwordMismatch": "Las contraseñas no coinciden",
+      "agreeTerms": "Por favor acepta los términos y condiciones",
+      "accountCreatedTitle": "¡Cuenta creada!",
+      "accountCreatedMsg": "Bienvenido a SecureYou"
+    }
+  },
+  "setup": {
+    "title": "Completa tu perfil",
+    "stepOf": "Paso {step} de 3",
+    "fullName": "Nombre completo",
+    "personalNumber": "Número personal",
+    "bloodGroup": "Grupo sanguíneo (Opcional)",
+    "presentAddress": "Dirección actual",
+    "permanentAddress": "Dirección permanente",
+    "emergencyContact": "Contacto de emergencia",
+    "locationPermissionTitle": "Permiso de ubicación",
+    "locationPermissionDesc": "Permite el acceso a la ubicación para que los servicios de emergencia te encuentren rápidamente",
+    "back": "Atrás",
+    "completeSetup": "Completar",
+    "continue": "Continuar",
+    "setupCompleteTitle": "¡Configuración completa!",
+    "setupCompleteMsg": "Tu perfil está listo"
+  },
+  "dashboard": {
+    "greetingTitle": "Mantente seguro hoy",
+    "greetingSubtitle": "Tus contactos de emergencia están listos para ayudar",
+    "quickActions": "Acciones rápidas",
+    "currentLocation": "Ubicación actual",
+    "viewMap": "Ver mapa",
+    "mirpurDhaka": "Mirpur, Dhaka, Bangladesh",
+    "safe": "Seguro",
+    "sosSent": "SOS ENVIADO",
+    "sosSentDescription": "Se han notificado a los contactos de emergencia",
+    "alertCancelledTitle": "Alerta cancelada",
+    "alertCancelledMsg": "Estado de emergencia despejado",
+    "recentIncidents": "Incidentes recientes"
+  },
+  "incidents": {
+    "title": "Incidentes recientes",
+    "subtitle": "Comparte los incidentes que viviste",
+  "upload": "Subir foto",
+  "uploaded": "Foto subida",
+  "uploadedDesc": "Tu foto está lista para compartir",
+    "placeholder": "Describe lo que pasó...",
+    "share": "Compartir",
+    "noIncidents": "Aún no hay incidentes. Comparte el primero.",
+    "like": "Me gusta",
+    "comment": "Comentar",
+    "shareAction": "Compartir",
+    "edit": "Editar publicación",
+    "copyLink": "Copiar enlace",
+    "linkCopied": "Enlace copiado al portapapeles",
+    "copyFailed": "Error al copiar el enlace",
+    "delete": "Eliminar",
+    "deleteConfirm": "¿Seguro que deseas eliminar esta publicación? Esta acción no se puede deshacer.",
+    "cancel": "Cancelar"
+    ,
+    "errorNoContent": "Por favor agrega texto o una foto antes de compartir."
+  },
+  "contacts": {
+    "title": "Contactos de emergencia",
+    "subtitle": "Gestiona tus contactos de confianza",
+    "yourContacts": "Tus contactos",
+    "addNew": "Agregar nuevo",
+    "governmentHelpline": "Línea de ayuda gubernamental",
+    "call": "Llamar"
+  },
+  "help": {
+    "title": "Ayuda y soporte",
+    "tutorials": "Tutoriales",
+    "faqTitle": "Preguntas frecuentes",
+    "howItWorks": "¿Cómo funciona SOS?",
+    "isLocationShared": "¿Se comparte mi ubicación automáticamente?",
+    "contactUs": "Contáctanos",
+    "emailSupport": "Soporte por correo",
+    "liveChat": "Chat en vivo",
+    "available247": "Disponible 24/7",
+    "feedbackTitle": "Comparte tus comentarios",
+    "feedbackDesc": "Ayúdanos a mejorar SecureYou con tus sugerencias",
+    "giveFeedback": "Dar comentarios"
+  },
+  "silent": {
+    "title": "Modo silencioso",
+    "activeTitle": "Modo silencioso activo",
+    "inactiveTitle": "Modo silencioso inactivo",
+    "activeDesc": "Tus alertas de emergencia se enviarán discretamente",
+    "inactiveDesc": "Activa para enviar alertas sin notificaciones obvias",
+    "enableLabel": "Activar modo silencioso",
+    "howItWorks": "Cómo funciona",
+    "shakeToAlert": "Agitar para alertar",
+    "shakeDesc": "Agita tu teléfono para activar SOS sin tocar la pantalla",
+    "disguiseMode": "Modo disfraz",
+    "disguiseDesc": "La app aparece como una app de notas cuando otros miran tu pantalla",
+    "testTrigger": "Probar activador de agitar",
+    "testDesc": "Prueba el activador para asegurarte de que funcione cuando lo necesites"
+  },
+  "map": {
+    "title": "Seguimiento de ubicación en vivo",
+    "subtitle": "Compartir ubicación en tiempo real",
+    "yourCurrentLocation": "Tu ubicación actual",
+    "shareLiveLocation": "Compartir ubicación en vivo",
+    "locationSharedTitle": "Ubicación compartida",
+    "locationSharedMsg": "Tu ubicación en vivo ha sido compartida con contactos de emergencia",
+    "locationUpdatedTitle": "Ubicación actualizada",
+    "locationUpdatedMsg": "Tu ubicación actual ha sido actualizada",
+    "locationActive": "Ubicación activa",
+    "lastUpdated": "Última actualización: Ahora mismo"
+  },
+  "notfound": {
+    "oops": "¡Vaya! Página no encontrada",
+    "returnHome": "Volver al inicio"
+  }
+}
