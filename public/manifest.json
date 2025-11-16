@@ -10,6 +10,8 @@
   "scope": "/",
   "lang": "en-US",
   "dir": "ltr",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon-72x72.png",
@@ -110,6 +112,5 @@
       "text": "text",
       "url": "url"
     }
-  },
-  "prefer_related_applications": false
+  }
 }

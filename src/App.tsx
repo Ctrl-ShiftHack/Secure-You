@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { InstallPWA } from "@/components/InstallPWA";
 import { Component, ReactNode } from "react";
 import Splash from "./pages/Splash";
 import Onboarding from "./pages/Onboarding";
@@ -81,6 +82,7 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <InstallPWA />
           <BrowserRouter>
             <AuthProvider>
               <Routes>
