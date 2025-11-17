@@ -324,6 +324,18 @@ const Login = () => {
             </Button>
           </form>
 
+          {/* Forgot Password */}
+          <div className="text-center mt-4">
+            <button
+              type="button"
+              onClick={() => setShowForgotPassword(true)}
+              className="text-sm text-muted-foreground hover:text-foreground"
+              disabled={loading}
+            >
+              {t("login.forgotPassword") || "Forgot Password?"}
+            </button>
+          </div>
+
           {/* Divider */}
           <div className="flex items-center gap-4 my-6">
             <div className="flex-1 h-px bg-border" />
@@ -358,33 +370,21 @@ const Login = () => {
             </Button>
           </div>
 
-          {/* Forgot Password */}
+          {/* Sign up link */}
           <div className="text-center mt-6">
-            <button
-              type="button"
-              onClick={() => setShowForgotPassword(true)}
-              className="text-sm text-muted-foreground hover:text-foreground"
-              disabled={loading}
-            >
-              {t("login.forgotPassword") || "Forgot password?"}
-            </button>
+            <p className="text-sm text-muted-foreground">
+              Don't have an account?{" "}
+              <button
+                type="button"
+                onClick={() => navigate("/signup")}
+                className="text-primary font-semibold hover:underline"
+                disabled={loading}
+              >
+                {t("login.signupLink") || "Sign up"}
+              </button>
+            </p>
           </div>
         </div>
-      </div>
-
-      {/* Sign up link */}
-      <div className="border-t border-border py-4">
-        <p className="text-center text-sm text-muted-foreground">
-          Don't have an account?{" "}
-          <button
-            type="button"
-            onClick={() => navigate("/signup")}
-            className="text-primary font-semibold hover:underline"
-            disabled={loading}
-          >
-            {t("login.signupLink") || "Sign up"}
-          </button>
-        </p>
       </div>
 
       {/* Forgot Password Dialog */}
