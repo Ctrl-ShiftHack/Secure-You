@@ -301,6 +301,11 @@ const Incidents = () => {
       setImageData(null);
       setLocation(null);
       
+      // Reset file input
+      if (fileRef.current) {
+        fileRef.current.value = '';
+      }
+      
       toast({ 
         title: t("incidents.posted") || "Posted!", 
         description: t("incidents.postedDesc") || "Your post has been shared"
@@ -430,7 +435,10 @@ const Incidents = () => {
             <img src={imageData} alt="preview" className="w-full max-h-64 object-cover rounded-md" />
             <button 
               type="button"
-              onClick={() => setImageData(null)}
+              onClick={() => {
+                setImageData(null);
+                setImageFile(null);
+              }}
               className="absolute top-2 right-2 bg-black/50 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-black/70"
             >
               ✕
