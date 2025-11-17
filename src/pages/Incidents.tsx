@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import IncidentCard from "@/components/IncidentCard";
 import { postsService } from "@/services/api";
 import type { PostWithCounts } from "@/types/database.types";
+import { uploadImage, fileToDataURL } from "@/lib/storage";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +35,7 @@ const Incidents = () => {
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [text, setText] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageData, setImageData] = useState<string | null>(null);
   const [location, setLocation] = useState<{ latitude: number; longitude: number; address?: string } | null>(null);
   const [showLocationDialog, setShowLocationDialog] = useState(false);
@@ -191,7 +193,7 @@ const Incidents = () => {
     );
   };
 
-  const handleImage = (file?: File) => {
+  const handleImage = async (file?: File) => {
     if (!file) return;
     
     // Validate file size (max 5MB)
@@ -203,24 +205,37 @@ const Incidents = () => {
       });
       return;
     }
-    
-    const reader = new FileReader();
-    reader.onload = () => {
-      const data = reader.result as string;
-      setImageData(data);
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
       toast({ 
-        title: t("incidents.uploaded") || "Uploaded", 
-        description: t("incidents.uploadedDesc") || "Image is ready to share" 
-      });
-    };
-    reader.onerror = () => {
-      toast({ 
-        title: t("incidents.uploadError") || "Upload failed", 
-        description: "Could not read the image file",
+        title: "Invalid file", 
+        description: "Please select an image file",
         variant: "destructive" 
       });
-    };
-    reader.readAsDataURL(file);
+      return;
+    }
+    
+    try {
+      // Store file for upload later
+      setImageFile(file);
+      
+      // Create preview using data URL
+      const dataUrl = await fileToDataURL(file);
+      setImageData(dataUrl);
+      
+      toast({ 
+        title: t("incidents.uploaded") || "Image ready", 
+        description: t("incidents.uploadedDesc") || "Image will be uploaded when you share" 
+      });
+    } catch (error) {
+      console.error('Error processing image:', error);
+      toast({ 
+        title: t("incidents.uploadError") || "Upload failed", 
+        description: "Could not process the image file",
+        variant: "destructive" 
+      });
+    }
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -247,18 +262,42 @@ const Incidents = () => {
     try {
       setLoading(true);
       
-      // In a production app, you'd upload the image to storage first
-      // For now, we'll just use the data URL
+      let imageUrl: string | null = null;
+      
+      // Upload image to Supabase Storage if available
+      if (imageFile && user) {
+        toast({ 
+          title: "Uploading image...", 
+          description: "Please wait"
+        });
+        
+        imageUrl = await uploadImage(imageFile, user.id);
+        
+        // Fallback to data URL if upload fails
+        if (!imageUrl && imageData) {
+          console.warn('Storage upload failed, using data URL fallback');
+          imageUrl = imageData;
+          toast({ 
+            title: "Using offline mode", 
+            description: "Image stored locally"
+          });
+        }
+      } else if (imageData) {
+        // Use data URL if no file (shouldn't happen, but safe fallback)
+        imageUrl = imageData;
+      }
+      
       await postsService.createPost({
         user_id: user.id,
         content: text.trim() || null,
-        image_url: imageData || null,
+        image_url: imageUrl,
         location: location ? JSON.parse(JSON.stringify(location)) : null,
         visibility: 'public',
         is_deleted: false
       });
 
       setText("");
+      setImageFile(null);
       setImageData(null);
       setLocation(null);
       
