@@ -41,15 +41,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     let isMounted = true;
+    let loadingTimeout: NodeJS.Timeout;
 
     // Get initial session
     const initializeAuth = async () => {
       try {
+        // Set a timeout to prevent infinite loading
+        loadingTimeout = setTimeout(() => {
+          if (isMounted && loading) {
+            console.warn('Auth initialization timeout - forcing completion');
+            setLoading(false);
+          }
+        }, 10000); // 10 second timeout
+
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Error getting session:', error);
           setLoading(false);
+          clearTimeout(loadingTimeout);
           return;
         }
 
@@ -63,9 +73,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         } else {
           setLoading(false);
         }
+        
+        clearTimeout(loadingTimeout);
       } catch (error) {
         console.error('Error initializing auth:', error);
         setLoading(false);
+        clearTimeout(loadingTimeout);
       }
     };
 
@@ -90,6 +103,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     return () => {
       isMounted = false;
+      if (loadingTimeout) clearTimeout(loadingTimeout);
       subscription.unsubscribe();
     };
   }, []);

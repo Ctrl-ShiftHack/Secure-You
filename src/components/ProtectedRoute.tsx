@@ -26,6 +26,14 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // If profile is still loading (null but user exists), show loading
+  if (user && profile === null && !loading) {
+    // Profile might not exist yet, redirect to setup
+    if (location.pathname !== '/setup') {
+      return <Navigate to="/setup" replace />;
+    }
+  }
+
   // Check if user needs to complete setup
   // Skip this check if already on setup page
   if (location.pathname !== '/setup' && profile) {
