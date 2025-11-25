@@ -74,8 +74,6 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 }
 
 const App = () => {
-  console.log('📱 App component rendering...');
-  
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>

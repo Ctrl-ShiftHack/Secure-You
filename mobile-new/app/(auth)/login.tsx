@@ -1,10 +1,20 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Button, useTheme } from 'react-native-paper';
+import {
+  View,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Alert,
+  TouchableOpacity,
+  TextInput as RNTextInput,
+} from 'react-native';
+import { Text } from 'react-native-paper';
 import { Link, router } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -12,7 +22,6 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
-  const theme = useTheme();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -39,71 +48,100 @@ export default function LoginScreen() {
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.content}>
+            {/* Logo */}
             <View style={styles.logoContainer}>
               <View style={styles.logoCircle}>
-                <MaterialCommunityIcons name="shield-check" size={60} color="white" />
+                <MaterialCommunityIcons name="shield-lock" size={50} color="white" />
               </View>
             </View>
-            
-            <Text variant="displaySmall" style={styles.title}>
-              SecureYou
-            </Text>
-            <Text variant="bodyLarge" style={styles.subtitle}>
-              Your Safety, Our Priority
+
+            <Text variant="headlineLarge" style={styles.title}>
+              Secure You
             </Text>
 
-            <View style={styles.formContainer}>
-              <TextInput
-                label="Email"
-                value={email}
-                onChangeText={setEmail}
-                mode="outlined"
-                autoCapitalize="none"
-                keyboardType="email-address"
-                left={<TextInput.Icon icon="email" />}
-                style={styles.input}
-              />
+            {/* Email Input */}
+            <Text variant="bodyMedium" style={styles.label}>
+              Email Address
+            </Text>
+            <RNTextInput
+              style={styles.input}
+              placeholder="Enter your email address"
+              placeholderTextColor="#a8a4b8"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+            />
 
-              <TextInput
-                label="Password"
+            {/* Password Input */}
+            <Text variant="bodyMedium" style={[styles.label, styles.labelSpacing]}>
+              Password
+            </Text>
+            <View style={styles.passwordContainer}>
+              <RNTextInput
+                style={[styles.input, styles.passwordInput]}
+                placeholder="Enter your password"
+                placeholderTextColor="#a8a4b8"
                 value={password}
                 onChangeText={setPassword}
-                mode="outlined"
                 secureTextEntry={!showPassword}
-                left={<TextInput.Icon icon="lock" />}
-                right={<TextInput.Icon icon={showPassword ? "eye-off" : "eye"} onPress={() => setShowPassword(!showPassword)} />}
-                style={styles.input}
               />
-
-              <Button
-                mode="contained"
-                onPress={handleLogin}
-                loading={loading}
-                disabled={loading}
-                style={styles.button}
-                buttonColor="#dc2626"
-                contentStyle={styles.buttonContent}
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowPassword(!showPassword)}
               >
-                Continue
-              </Button>
-
-              <TouchableOpacity style={styles.forgotPassword}>
-                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                <MaterialCommunityIcons
+                  name={showPassword ? 'eye-off' : 'eye'}
+                  size={20}
+                  color="#6b7280"
+                />
               </TouchableOpacity>
             </View>
 
+            {/* Login Button */}
+            <TouchableOpacity
+              onPress={handleLogin}
+              disabled={loading}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={['#667eea', '#764ba2']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.loginButton}
+              >
+                <Text style={styles.loginButtonText}>
+                  {loading ? 'Logging in...' : 'Login'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            {/* Divider */}
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
+              <Text style={styles.dividerText}>Or Continue With</Text>
               <View style={styles.dividerLine} />
             </View>
 
+            {/* Social Login Buttons */}
+            <TouchableOpacity style={styles.socialButton}>
+              <MaterialCommunityIcons name="google" size={20} color="#db4437" />
+              <Text style={styles.socialButtonText}>Google</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.socialButton}>
+              <MaterialCommunityIcons name="facebook" size={20} color="#4267B2" />
+              <Text style={styles.socialButtonText}>Facebook</Text>
+            </TouchableOpacity>
+
+            {/* Sign Up Link */}
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Don't have an account? </Text>
-              <Link href="/(auth)/register">
-                <Text style={styles.signupLink}>
-                  Sign up
-                </Text>
+              <Text style={styles.footerText}>Don't have account? </Text>
+              <Link href="/(auth)/register" asChild>
+                <TouchableOpacity>
+                  <Text style={styles.link}>Sign up</Text>
+                </TouchableOpacity>
               </Link>
             </View>
           </View>
@@ -116,65 +154,70 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#ffffff',
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 20,
   },
   content: {
-    paddingVertical: 40,
+    flex: 1,
+    padding: 24,
+    justifyContent: 'center',
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   logoCircle: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#dc2626',
+    backgroundColor: '#667eea',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
   },
   title: {
     textAlign: 'center',
-    marginBottom: 8,
     fontWeight: 'bold',
+    marginBottom: 40,
     color: '#1f2937',
   },
-  subtitle: {
-    textAlign: 'center',
-    marginBottom: 40,
-    color: '#6b7280',
+  label: {
+    color: '#1f2937',
+    marginBottom: 8,
+    fontWeight: '500',
   },
-  formContainer: {
-    marginBottom: 24,
-  },
-  input: {
-    marginBottom: 16,
-    backgroundColor: '#fff',
-  },
-  button: {
-    marginTop: 8,
-  },
-  buttonContent: {
-    paddingVertical: 8,
-  },
-  forgotPassword: {
-    alignItems: 'center',
+  labelSpacing: {
     marginTop: 16,
   },
-  forgotPasswordText: {
-    color: '#dc2626',
-    fontSize: 14,
-    fontWeight: '600',
+  input: {
+    backgroundColor: '#e8e4f3',
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+    color: '#1f2937',
+  },
+  passwordContainer: {
+    position: 'relative',
+  },
+  passwordInput: {
+    paddingRight: 50,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 14,
+    top: 14,
+  },
+  loginButton: {
+    borderRadius: 50,
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 32,
+  },
+  loginButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   divider: {
     flexDirection: 'row',
@@ -187,21 +230,38 @@ const styles = StyleSheet.create({
     backgroundColor: '#e5e7eb',
   },
   dividerText: {
-    marginHorizontal: 16,
-    color: '#9ca3af',
+    marginHorizontal: 12,
+    color: '#6b7280',
     fontSize: 14,
+  },
+  socialButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+  },
+  socialButtonText: {
+    marginLeft: 8,
+    color: '#1f2937',
+    fontSize: 16,
+    fontWeight: '500',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 8,
+    marginTop: 24,
   },
   footerText: {
     color: '#6b7280',
     fontSize: 14,
   },
-  signupLink: {
-    color: '#dc2626',
+  link: {
+    color: '#667eea',
     fontSize: 14,
     fontWeight: 'bold',
   },

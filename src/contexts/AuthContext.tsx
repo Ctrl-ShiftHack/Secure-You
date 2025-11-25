@@ -126,7 +126,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               updated_at: new Date().toISOString(),
             });
             setProfile(newProfile);
-            console.log('✅ Profile created automatically for verified user');
           } else {
             // No metadata, profile will be created in setup page
             setProfile(null);
@@ -178,13 +177,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           };
         }
         return { error: signUpError };
-      }
-
-      // Check if user needs to confirm email
-      if (data?.user && !data.session) {
-        console.log('✅ Signup successful - email confirmation required');
-      } else if (data?.session) {
-        console.log('✅ Signup successful - user logged in immediately');
       }
 
       return { error: null };

@@ -1,23 +1,41 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
-import { Text, TextInput, Button, useTheme } from 'react-native-paper';
+import {
+  View,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Alert,
+  TouchableOpacity,
+  TextInput as RNTextInput,
+} from 'react-native';
+import { Text } from 'react-native-paper';
 import { Link, router } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function RegisterScreen() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
-  const theme = useTheme();
 
   const handleRegister = async () => {
     if (!fullName || !email || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
       return;
     }
 
@@ -38,8 +56,11 @@ export default function RegisterScreen() {
     if (error) {
       Alert.alert('Registration Failed', error.message);
     } else {
-      Alert.alert('Success', 'Account created! Please check your email to verify.');
-      router.replace('/(auth)/login');
+      Alert.alert(
+        'Success', 
+        'Account created! Please check your email to verify your account.',
+        [{ text: 'OK', onPress: () => router.replace('/(auth)/login') }]
+      );
     }
   };
 
@@ -51,85 +72,124 @@ export default function RegisterScreen() {
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.content}>
-            <View style={styles.logoContainer}>
-              <View style={styles.logoCircle}>
-                <MaterialCommunityIcons name="shield-check" size={50} color="white" />
-              </View>
-            </View>
-            
-            <Text variant="displaySmall" style={styles.title}>
+            {/* Back Button */}
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <MaterialCommunityIcons name="arrow-left" size={24} color="#1f2937" />
+            </TouchableOpacity>
+
+            {/* Header */}
+            <Text variant="headlineMedium" style={styles.title}>
               Create Account
             </Text>
-            <Text variant="bodyLarge" style={styles.subtitle}>
-              Join SecureYou Today
+            <Text variant="bodyMedium" style={styles.subtitle}>
+              Join Secure You Today
             </Text>
 
-            <View style={styles.formContainer}>
-              <TextInput
-                label="Full Name"
-                value={fullName}
-                onChangeText={setFullName}
-                mode="outlined"
-                left={<TextInput.Icon icon="account" />}
-                style={styles.input}
-              />
+            {/* Name Input */}
+            <Text variant="bodyMedium" style={styles.label}>
+              Name
+            </Text>
+            <RNTextInput
+              style={styles.input}
+              placeholder="Ayesha Siddika Mohona"
+              placeholderTextColor="#a8a4b8"
+              value={fullName}
+              onChangeText={setFullName}
+            />
 
-              <TextInput
-                label="Email"
-                value={email}
-                onChangeText={setEmail}
-                mode="outlined"
-                autoCapitalize="none"
-                keyboardType="email-address"
-                left={<TextInput.Icon icon="email" />}
-                style={styles.input}
-              />
-
-              <TextInput
-                label="Password"
+            {/* Password Input */}
+            <Text variant="bodyMedium" style={[styles.label, styles.labelSpacing]}>
+              Password
+            </Text>
+            <View style={styles.passwordContainer}>
+              <RNTextInput
+                style={[styles.input, styles.passwordInput]}
+                placeholder="Create a strong password"
+                placeholderTextColor="#a8a4b8"
                 value={password}
                 onChangeText={setPassword}
-                mode="outlined"
-                secureTextEntry
-                left={<TextInput.Icon icon="lock" />}
-                style={styles.input}
+                secureTextEntry={!showPassword}
               />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <MaterialCommunityIcons
+                  name={showPassword ? 'eye-off' : 'eye'}
+                  size={20}
+                  color="#6b7280"
+                />
+              </TouchableOpacity>
+            </View>
 
-              <TextInput
-                label="Confirm Password"
+            {/* Confirm Password Input */}
+            <Text variant="bodyMedium" style={[styles.label, styles.labelSpacing]}>
+              Confirm Password
+            </Text>
+            <View style={styles.passwordContainer}>
+              <RNTextInput
+                style={[styles.input, styles.passwordInput]}
+                placeholder="Confirm your password"
+                placeholderTextColor="#a8a4b8"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
-                mode="outlined"
-                secureTextEntry
-                left={<TextInput.Icon icon="lock-check" />}
-                style={styles.input}
+                secureTextEntry={!showConfirmPassword}
               />
-
-              <Button
-                mode="contained"
-                onPress={handleRegister}
-                loading={loading}
-                disabled={loading}
-                style={styles.button}
-                buttonColor="#dc2626"
-                contentStyle={styles.buttonContent}
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
               >
-                Create Account
-              </Button>
+                <MaterialCommunityIcons
+                  name={showConfirmPassword ? 'eye-off' : 'eye'}
+                  size={20}
+                  color="#6b7280"
+                />
+              </TouchableOpacity>
             </View>
 
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.dividerLine} />
-            </View>
+            {/* Email Input */}
+            <Text variant="bodyMedium" style={[styles.label, styles.labelSpacing]}>
+              Email Address
+            </Text>
+            <RNTextInput
+              style={styles.input}
+              placeholder="example@email.com"
+              placeholderTextColor="#a8a4b8"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+            />
 
+            {/* Sign Up Button */}
+            <TouchableOpacity
+              onPress={handleRegister}
+              disabled={loading}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={['#4facfe', '#00f2fe']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.signupButton}
+              >
+                <Text style={styles.signupButtonText}>
+                  {loading ? 'Creating account...' : 'Sign Up'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            {/* Login Link */}
             <View style={styles.footer}>
               <Text style={styles.footerText}>Already have an account? </Text>
-              <Link href="/(auth)/login">
-                <Text style={styles.loginLink}>
-                  Login
-                </Text>
+              <Link href="/(auth)/login" asChild>
+                <TouchableOpacity>
+                  <Text style={styles.link}>Login</Text>
+                </TouchableOpacity>
               </Link>
             </View>
           </View>
@@ -142,84 +202,81 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#ffffff',
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingVertical: 20,
   },
   content: {
     flex: 1,
+    padding: 24,
+    paddingTop: 60,
   },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 24,
-    marginTop: 20,
-  },
-  logoCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#dc2626',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+  backButton: {
+    position: 'absolute',
+    top: 20,
+    left: 24,
+    zIndex: 10,
   },
   title: {
-    textAlign: 'center',
-    marginBottom: 8,
     fontWeight: 'bold',
+    marginBottom: 8,
     color: '#1f2937',
+    textAlign: 'center',
   },
   subtitle: {
     textAlign: 'center',
     marginBottom: 32,
     color: '#6b7280',
   },
-  formContainer: {
-    marginBottom: 24,
+  label: {
+    color: '#1f2937',
+    marginBottom: 8,
+    fontWeight: '500',
+  },
+  labelSpacing: {
+    marginTop: 16,
   },
   input: {
-    marginBottom: 16,
-    backgroundColor: '#fff',
+    backgroundColor: '#e8e4f3',
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+    color: '#1f2937',
   },
-  button: {
-    marginTop: 8,
+  passwordContainer: {
+    position: 'relative',
   },
-  buttonContent: {
-    paddingVertical: 8,
+  passwordInput: {
+    paddingRight: 50,
   },
-  divider: {
-    flexDirection: 'row',
+  eyeIcon: {
+    position: 'absolute',
+    right: 14,
+    top: 14,
+  },
+  signupButton: {
+    borderRadius: 50,
+    padding: 16,
     alignItems: 'center',
-    marginVertical: 24,
+    marginTop: 32,
   },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#e5e7eb',
-  },
-  dividerText: {
-    marginHorizontal: 16,
-    color: '#9ca3af',
-    fontSize: 14,
+  signupButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 8,
+    marginTop: 24,
   },
   footerText: {
     color: '#6b7280',
     fontSize: 14,
   },
-  loginLink: {
-    color: '#dc2626',
+  link: {
+    color: '#4facfe',
     fontSize: 14,
     fontWeight: 'bold',
   },

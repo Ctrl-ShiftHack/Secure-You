@@ -124,6 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
         options: {
           data: { full_name: fullName },
+          emailRedirectTo: undefined, // Email verification will be handled by Supabase
         },
       });
       return { error };
@@ -142,6 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { error } = await supabase
         .from('profiles')
+        // @ts-ignore - Supabase type inference issue
         .update(updates)
         .eq('user_id', user.id);
 
