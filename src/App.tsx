@@ -8,7 +8,6 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { InstallPWA } from "@/components/InstallPWA";
 import { Component, ReactNode } from "react";
 import Splash from "./pages/Splash";
-import Onboarding from "./pages/Onboarding";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ResetPassword from "./pages/ResetPassword";
@@ -86,7 +85,6 @@ const App = () => {
             <AuthProvider>
               <Routes>
                 <Route path="/" element={<Splash />} />
-                <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
