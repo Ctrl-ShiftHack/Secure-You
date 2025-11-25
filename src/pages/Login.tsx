@@ -54,10 +54,16 @@ const Login = () => {
   const handleSocialLogin = async (provider: 'google' | 'facebook') => {
     try {
       setLoading(true);
+      
+      // Use production URL for redirects
+      const redirectUrl = import.meta.env.PROD 
+        ? 'https://secure-you.vercel.app/dashboard'
+        : `${window.location.origin}/dashboard`;
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: redirectUrl,
         },
       });
 
