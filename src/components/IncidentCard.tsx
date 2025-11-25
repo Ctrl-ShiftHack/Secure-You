@@ -93,7 +93,7 @@ const IncidentCard = ({ post, currentUserId, onDelete, onRefresh }: IncidentCard
 
       return () => unsubscribe();
     } catch (error) {
-      console.log('Realtime not available for reactions');
+      // Realtime not available for reactions
     }
   }, [post.id, currentUserId]);
 
@@ -115,7 +115,7 @@ const IncidentCard = ({ post, currentUserId, onDelete, onRefresh }: IncidentCard
 
       return () => unsubscribe();
     } catch (error) {
-      console.log('Realtime not available for comments');
+      // Realtime not available for comments
     }
   }, [post.id, openComments]);
 

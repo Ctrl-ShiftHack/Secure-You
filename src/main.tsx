@@ -23,7 +23,9 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
 				}, 60000); // Check every minute
 			})
 			.catch((error) => {
-				console.error('❌ Service Worker registration failed:', error);
+				if (import.meta.env.DEV) {
+					console.error('❌ Service Worker registration failed:', error);
+				}
 			});
 	});
 }
@@ -33,20 +35,22 @@ if ('Notification' in window && import.meta.env.PROD) {
 	if (Notification.permission === 'default') {
 		// Request permission after user interaction (not immediately)
 		setTimeout(() => {
-			Notification.requestPermission().then(permission => {
-				console.log('Notification permission:', permission);
-			});
+			Notification.requestPermission();
 		}, 5000); // Wait 5 seconds before asking
 	}
 }
 
 // Add error boundary
 window.addEventListener('error', (event) => {
-	console.error('Global error:', event.error);
+	if (import.meta.env.DEV) {
+		console.error('Global error:', event.error);
+	}
 });
 
 window.addEventListener('unhandledrejection', (event) => {
-	console.error('Unhandled promise rejection:', event.reason);
+	if (import.meta.env.DEV) {
+		console.error('Unhandled promise rejection:', event.reason);
+	}
 });
 
 // Add a loading indicator first
@@ -59,20 +63,27 @@ setTimeout(() => {
 			throw new Error('Root element not found');
 		}
 		
-		console.log('🚀 Mounting React app...');
-		console.log('Environment check:', {
-			supabaseUrl: import.meta.env.VITE_SUPABASE_URL ? '✓' : '✗',
-			supabaseKey: import.meta.env.VITE_SUPABASE_ANON_KEY ? '✓' : '✗'
-		});
+		if (import.meta.env.DEV) {
+			console.log('🚀 Mounting React app...');
+			console.log('Environment check:', {
+				supabaseUrl: import.meta.env.VITE_SUPABASE_URL ? '✓' : '✗',
+				supabaseKey: import.meta.env.VITE_SUPABASE_ANON_KEY ? '✓' : '✗'
+			});
+		}
 		
 		createRoot(rootElement).render(
 			<I18nProvider>
 				<App />
 			</I18nProvider>
 		);
-		console.log('✅ App mounted successfully');
+		
+		if (import.meta.env.DEV) {
+			console.log('✅ App mounted successfully');
+		}
 	} catch (error) {
-		console.error('❌ Failed to mount app:', error);
+		if (import.meta.env.DEV) {
+			console.error('❌ Failed to mount app:', error);
+		}
 		const rootElement = document.getElementById("root");
 		if (rootElement) {
 			rootElement.innerHTML = `
