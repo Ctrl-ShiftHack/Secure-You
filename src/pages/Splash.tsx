@@ -14,18 +14,11 @@ const Splash = () => {
     if (loading) return;
 
     const timer = setTimeout(() => {
-      // Check if user has seen onboarding before
-      const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
-      
       // If user is logged in, go to dashboard
       if (user) {
         navigate("/dashboard");
       }
-      // If first time visitor, show onboarding
-      else if (!hasSeenOnboarding) {
-        navigate("/onboarding");
-      }
-      // Returning visitor, go straight to login
+      // All non-authenticated users go to login
       else {
         navigate("/login");
       }
