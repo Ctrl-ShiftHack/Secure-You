@@ -17,6 +17,7 @@ function Map() {
   const [loading, setLoading] = useState(true);
   const [sharing, setSharing] = useState(false);
   const [address, setAddress] = useState<string>("Getting location...");
+  const [permissionDenied, setPermissionDenied] = useState(false);
 
   useEffect(() => {
     // Get initial location
@@ -24,17 +25,32 @@ function Map() {
       .then((loc) => {
         setLocation(loc);
         setLoading(false);
+        setPermissionDenied(false);
         reverseGeocode(loc.latitude, loc.longitude);
       })
       .catch((error) => {
         console.error('Location error:', error);
-        toast({
-          title: "Location Error",
-          description: "Could not access your location. Please enable location services.",
-          variant: "destructive",
-        });
+        
+        // Check if permission was denied
+        if (error.code === 1 || error.message?.includes('denied') || error.message?.includes('permission')) {
+          setPermissionDenied(true);
+          setAddress("Location permission denied");
+          toast({
+            title: "Location Permission Required",
+            description: "Please enable location access to use this feature",
+            variant: "destructive",
+            duration: 6000,
+          });
+        } else {
+          toast({
+            title: "Location Error",
+            description: "Could not access your location. Please enable location services.",
+            variant: "destructive",
+          });
+          setAddress("Location unavailable");
+        }
+        
         setLoading(false);
-        setAddress("Location unavailable");
       });
   }, []);
 
@@ -156,6 +172,35 @@ function Map() {
             <div className="text-center">
               <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
               <p className="text-muted-foreground">Getting your location...</p>
+            </div>
+          ) : permissionDenied ? (
+            <div className="text-center p-8 max-w-md">
+              <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-6">
+                <MapPin className="w-10 h-10 text-destructive" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-3">
+                Location Permission Required
+              </h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                To use the live location tracking feature, you need to grant location access to this app.
+              </p>
+              <div className="space-y-3">
+                <Button 
+                  onClick={handleRefresh} 
+                  className="w-full gradient-primary text-white"
+                >
+                  <Navigation className="w-4 h-4 mr-2" />
+                  Enable Location Access
+                </Button>
+                <div className="bg-muted/50 rounded-lg p-4 text-left">
+                  <p className="text-xs text-muted-foreground mb-2 font-semibold">How to enable:</p>
+                  <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+                    <li>Click the location icon in your browser's address bar</li>
+                    <li>Select "Allow" or "Always Allow"</li>
+                    <li>Refresh the page or click the button above</li>
+                  </ol>
+                </div>
+              </div>
             </div>
           ) : location ? (
             <>

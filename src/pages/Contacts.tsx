@@ -1,7 +1,17 @@
-import { Plus } from "lucide-react";
+import { Plus, AlertTriangle } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { ContactCard } from "@/components/ContactCard";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useI18n } from "@/i18n";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +36,8 @@ const Contacts = () => {
   const { toast } = useToast();
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [contactToDelete, setContactToDelete] = useState<{ id: string; name: string } | null>(null);
 
   // Load contacts from Supabase
   useEffect(() => {
@@ -63,13 +75,20 @@ const Contacts = () => {
     navigate(`/contacts/edit/${contactId}`);
   };
 
-  const handleDelete = async (contactId: string, contactName: string) => {
+  const handleDeleteClick = (contactId: string, contactName: string) => {
+    setContactToDelete({ id: contactId, name: contactName });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!contactToDelete) return;
+    
     try {
-      await contactsService.deleteContact(contactId);
-      setContacts(prev => prev.filter(c => c.id !== contactId));
+      await contactsService.deleteContact(contactToDelete.id);
+      setContacts(prev => prev.filter(c => c.id !== contactToDelete.id));
       toast({
         title: "Contact Deleted",
-        description: `${contactName} has been removed from your contacts`
+        description: `${contactToDelete.name} has been removed from your contacts`
       });
     } catch (error: any) {
       console.error('Error deleting contact:', error);
@@ -78,6 +97,9 @@ const Contacts = () => {
         description: error?.message || "Could not delete contact",
         variant: "destructive"
       });
+    } finally {
+      setDeleteDialogOpen(false);
+      setContactToDelete(null);
     }
   };
 
@@ -139,7 +161,7 @@ const Contacts = () => {
                   email={contact.email}
                   isPrimary={contact.is_primary}
                   onEdit={() => handleEdit(contact.id)}
-                  onDelete={() => handleDelete(contact.id, contact.name)}
+                  onDelete={() => handleDeleteClick(contact.id, contact.name)}
                   onCall={() => handleCall(contact.phone_number)}
                 />
               ))}
@@ -190,6 +212,30 @@ const Contacts = () => {
       </main>
 
       <BottomNav />
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              Delete Contact?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{contactToDelete?.name}</strong>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

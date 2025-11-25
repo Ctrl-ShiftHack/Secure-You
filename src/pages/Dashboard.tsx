@@ -17,10 +17,13 @@ const Dashboard = () => {
   const [isSOS, setIsSOS] = useState(false);
   const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([]);
   const [isOffline, setIsOffline] = useState(!isOnline());
+  const [lastSOSTime, setLastSOSTime] = useState<number | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useI18n();
   const { profile } = useProfile();
+  
+  const SOS_COOLDOWN = 60000; // 60 seconds between SOS alerts
 
   const initials = (profile?.name || "").split(" ").map(s => s[0] || "").slice(0,2).join("").toUpperCase();
   const frontName = (profile?.name || "").split(" ")[0] || profile?.name || "";
@@ -56,6 +59,19 @@ const Dashboard = () => {
 
   const handleSOSPress = async () => {
     if (!isSOS) {
+      // Rate limiting check
+      const now = Date.now();
+      if (lastSOSTime && now - lastSOSTime < SOS_COOLDOWN) {
+        const remainingSeconds = Math.ceil((SOS_COOLDOWN - (now - lastSOSTime)) / 1000);
+        toast({
+          title: "Please Wait",
+          description: `You can send another SOS alert in ${remainingSeconds} seconds. This prevents accidental multiple alerts.`,
+          variant: "destructive",
+          duration: 5000,
+        });
+        return;
+      }
+      
       // Check if user has emergency contacts
       if (emergencyContacts.length === 0) {
         toast({
@@ -68,6 +84,7 @@ const Dashboard = () => {
       }
 
       setIsSOS(true);
+      setLastSOSTime(now);
       
       try {
         // Get current location

@@ -173,9 +173,14 @@ const Setup = () => {
         }
 
         // Save emergency contacts
-        for (let i = 0; i < validContacts.length; i++) {
-          const contact = validContacts[i];
-          await contactsService.createContact({
+        console.log('Saving emergency contacts:', validContacts.length);
+        const contactPromises = validContacts.map((contact, i) => {
+          console.log(`Creating contact ${i+1}:`, {
+            name: sanitizeText(contact.name),
+            phone: normalizeBDPhone(contact.phone),
+            is_primary: i === 0
+          });
+          return contactsService.createContact({
             user_id: user.id,
             name: sanitizeText(contact.name),
             phone_number: normalizeBDPhone(contact.phone),
@@ -183,7 +188,17 @@ const Setup = () => {
             relationship: sanitizeText(contact.relationship) || null,
             is_primary: i === 0, // First contact is primary
           });
-        }
+        });
+        
+        // Wait for all contacts with timeout
+        await Promise.race([
+          Promise.all(contactPromises),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Contact save timeout - please try again')), 15000)
+          )
+        ]);
+        
+        console.log('All contacts saved successfully');
         
         toast({
           title: "Setup Complete! 🎉",
@@ -202,10 +217,14 @@ const Setup = () => {
         
         let errorMessage = "Could not save profile. Please try again.";
         
-        if (error?.message?.includes('duplicate key')) {
+        if (error?.message?.includes('timeout')) {
+          errorMessage = "Save operation timed out. Please check your connection and try again.";
+        } else if (error?.message?.includes('duplicate key')) {
           errorMessage = "This contact already exists. Please use a different phone number.";
         } else if (error?.message?.includes('foreign key')) {
           errorMessage = "Profile setup error. Please try logging out and back in.";
+        } else if (error?.message?.includes('Network') || error?.message?.includes('fetch')) {
+          errorMessage = "Network error. Please check your connection and try again.";
         } else if (error?.message) {
           errorMessage = error.message;
         }
@@ -213,9 +232,11 @@ const Setup = () => {
         toast({
           title: "Error",
           description: errorMessage,
-          variant: "destructive"
+          variant: "destructive",
+          duration: 8000,
         });
       } finally {
+        console.log('Resetting saving state');
         setSaving(false);
       }
     }
