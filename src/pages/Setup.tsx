@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/i18n";
 import { useAuth } from "@/contexts/AuthContext";
-import { contactsService } from "@/services/api";
+import { contactsService, profileService } from "@/services/api";
 import { isValidBDPhone, formatBDPhone, normalizeBDPhone, getPhoneErrorMessage, isValidName, sanitizeText, isValidEmail, normalizeEmail } from "@/lib/validation";
 
 interface EmergencyContactForm {
@@ -143,17 +143,35 @@ const Setup = () => {
           }
         }
         
-        // Update profile
+        // Update or create profile
         const normalizedPhone = normalizeBDPhone(formData.phone);
         const sanitizedName = sanitizeText(formData.fullName);
         const sanitizedAddress = sanitizeText(formData.address);
         
-        await updateProfile({
-          full_name: sanitizedName,
-          phone_number: normalizedPhone,
-          blood_type: formData.bloodGroup as any || null,
-          address: sanitizedAddress || null,
-        });
+        try {
+          await updateProfile({
+            full_name: sanitizedName,
+            phone_number: normalizedPhone,
+            blood_type: formData.bloodGroup as any || null,
+            address: sanitizedAddress || null,
+          });
+        } catch (profileError: any) {
+          // If profile doesn't exist, create it
+          if (profileError.message?.includes('No rows') || profileError.code === 'PGRST116') {
+            await profileService.createProfile({
+              user_id: user.id,
+              full_name: sanitizedName,
+              phone_number: normalizedPhone,
+              blood_type: formData.bloodGroup as any || null,
+              address: sanitizedAddress || null,
+              emergency_contacts: [],
+              location_sharing_enabled: true,
+              updated_at: new Date().toISOString(),
+            });
+          } else {
+            throw profileError;
+          }
+        }
 
         // Save emergency contacts
         for (let i = 0; i < validContacts.length; i++) {
@@ -175,10 +193,27 @@ const Setup = () => {
         
         navigate("/dashboard");
       } catch (error: any) {
-        console.error('Profile update error:', error);
+        console.error('Setup error details:', {
+          message: error?.message,
+          code: error?.code,
+          details: error?.details,
+          hint: error?.hint,
+          fullError: error
+        });
+        
+        let errorMessage = "Could not save profile. Please try again.";
+        
+        if (error?.message?.includes('duplicate key')) {
+          errorMessage = "This contact already exists. Please use a different phone number.";
+        } else if (error?.message?.includes('foreign key')) {
+          errorMessage = "Profile setup error. Please try logging out and back in.";
+        } else if (error?.message) {
+          errorMessage = error.message;
+        }
+        
         toast({
           title: "Error",
-          description: error?.message || "Could not save profile. Please try again.",
+          description: errorMessage,
           variant: "destructive"
         });
       } finally {
