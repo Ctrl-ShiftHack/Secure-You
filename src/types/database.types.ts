@@ -70,7 +70,7 @@ export interface Profile {
   medical_info?: string | null;
   blood_type?: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-' | null;
   allergies?: string | null;
-  emergency_contacts?: EmergencyContact[];
+  location_sharing_enabled?: boolean;
 }
 
 export interface EmergencyContact {

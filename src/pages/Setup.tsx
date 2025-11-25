@@ -164,7 +164,6 @@ const Setup = () => {
               phone_number: normalizedPhone,
               blood_type: formData.bloodGroup as any || null,
               address: sanitizedAddress || null,
-              emergency_contacts: [],
               location_sharing_enabled: true,
               updated_at: new Date().toISOString(),
             });

@@ -29,7 +29,7 @@ export const profileService = {
   async getProfile(userId: string) {
     const { data, error } = await supabase
       .from('profiles')
-      .select('*, emergency_contacts(*)')
+      .select('*')
       .eq('user_id', userId)
       .single();
     
