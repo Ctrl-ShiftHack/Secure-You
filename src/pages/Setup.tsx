@@ -172,53 +172,62 @@ const Setup = () => {
           }
         }
 
-        // Save emergency contacts
-        console.log('Saving emergency contacts:', validContacts.length);
-        const contactPromises = validContacts.map((contact, i) => {
-          console.log(`Creating contact ${i+1}:`, {
-            name: sanitizeText(contact.name),
-            phone: normalizeBDPhone(contact.phone),
-            is_primary: i === 0
+        // Save emergency contacts with individual timeout handling
+        let savedCount = 0;
+        const failedContacts: string[] = [];
+        
+        for (const [i, contact] of validContacts.entries()) {
+          try {
+            await Promise.race([
+              contactsService.createContact({
+                user_id: user.id,
+                name: sanitizeText(contact.name),
+                phone_number: normalizeBDPhone(contact.phone),
+                email: contact.email ? normalizeEmail(contact.email) : null,
+                relationship: sanitizeText(contact.relationship) || null,
+                is_primary: i === 0, // First contact is primary
+              }),
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('timeout')), 8000)
+              )
+            ]);
+            savedCount++;
+          } catch (err: any) {
+            if (import.meta.env.DEV) {
+              console.error(`Failed to save contact ${contact.name}:`, err);
+            }
+            failedContacts.push(contact.name);
+          }
+        }
+        
+        // Navigate even if some contacts failed, as long as profile is saved
+        if (savedCount > 0) {
+          toast({
+            title: "Setup Complete! 🎉",
+            description: failedContacts.length > 0 
+              ? `Profile saved. ${savedCount} contact(s) added. ${failedContacts.length} failed - you can add them later.`
+              : "Your profile and emergency contacts have been saved"
           });
-          return contactsService.createContact({
-            user_id: user.id,
-            name: sanitizeText(contact.name),
-            phone_number: normalizeBDPhone(contact.phone),
-            email: contact.email ? normalizeEmail(contact.email) : null,
-            relationship: sanitizeText(contact.relationship) || null,
-            is_primary: i === 0, // First contact is primary
-          });
-        });
-        
-        // Wait for all contacts with timeout
-        await Promise.race([
-          Promise.all(contactPromises),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Contact save timeout - please try again')), 15000)
-          )
-        ]);
-        
-        console.log('All contacts saved successfully');
-        
-        toast({
-          title: "Setup Complete! 🎉",
-          description: "Your profile and emergency contacts have been saved"
-        });
-        
-        navigate("/dashboard");
+          // Force navigation after a brief delay to ensure toast is visible
+          setTimeout(() => {
+            navigate("/dashboard", { replace: true });
+          }, 1500);
+        } else {
+          throw new Error('Failed to save any contacts. Please try again.');
+        }
       } catch (error: any) {
-        console.error('Setup error details:', {
-          message: error?.message,
-          code: error?.code,
-          details: error?.details,
-          hint: error?.hint,
-          fullError: error
-        });
+        if (import.meta.env.DEV) {
+          console.error('Setup error:', error);
+        }
         
         let errorMessage = "Could not save profile. Please try again.";
         
         if (error?.message?.includes('timeout')) {
-          errorMessage = "Save operation timed out. Please check your connection and try again.";
+          errorMessage = "Operation timed out. Your profile was saved, but contacts may need to be added manually from the Contacts page.";
+          // Still navigate if profile was saved
+          setTimeout(() => {
+            navigate("/dashboard", { replace: true });
+          }, 3000);
         } else if (error?.message?.includes('duplicate key')) {
           errorMessage = "This contact already exists. Please use a different phone number.";
         } else if (error?.message?.includes('foreign key')) {
@@ -236,7 +245,6 @@ const Setup = () => {
           duration: 8000,
         });
       } finally {
-        console.log('Resetting saving state');
         setSaving(false);
       }
     }

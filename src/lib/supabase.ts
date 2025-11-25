@@ -25,5 +25,10 @@ export const supabase = createClient<Database>(cleanUrl, anonKey, {
     detectSessionInUrl: true,
     storageKey: 'secureyou-auth',
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    // Production redirect URLs
+    flowType: 'pkce',
+    redirectTo: typeof window !== 'undefined' 
+      ? `${window.location.origin}/setup` 
+      : undefined,
   },
 });
