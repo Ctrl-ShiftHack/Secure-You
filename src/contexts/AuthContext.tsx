@@ -146,6 +146,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
+      // Use production URL for email redirect, fallback to current origin
+      const redirectUrl = import.meta.env.PROD 
+        ? 'https://secure-you.vercel.app/verify-email'
+        : `${window.location.origin}/verify-email`;
+      
       // Store full name in user metadata so it's available after email verification
       const { error: signUpError, data } = await supabase.auth.signUp({
         email,
@@ -154,7 +159,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           data: {
             full_name: fullName,
           },
-          emailRedirectTo: `${window.location.origin}/setup`,
+          emailRedirectTo: redirectUrl,
         },
       });
 
