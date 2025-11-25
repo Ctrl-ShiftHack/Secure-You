@@ -55,198 +55,14 @@ const Setup = () => {
 
   const handleNext = async () => {
     if (step < 3) {
-      // Validate current step before proceeding
-      if (step === 1) {
-        // Validate name
-        if (!formData.fullName.trim() || !isValidName(formData.fullName)) {
-          toast({
-            title: "Invalid Name",
-            description: "Please enter a valid full name (at least 2 characters, letters only)",
-            variant: "destructive"
-          });
-          return;
-        }
-        
-        // Validate phone - make it required
-        if (!formData.phone.trim()) {
-          toast({
-            title: "Phone Required",
-            description: "Please enter your phone number for emergency contacts",
-            variant: "destructive"
-          });
-          return;
-        }
-        
-        const phoneError = getPhoneErrorMessage(formData.phone);
-        if (phoneError) {
-          toast({
-            title: "Invalid Phone Number",
-            description: phoneError,
-            variant: "destructive"
-          });
-          return;
-        }
-      }
-      
       setStep(step + 1);
     } else {
-      // Save profile and emergency contacts on final step
-      setSaving(true);
-      try {
-        if (!user) {
-          throw new Error("User not found");
-        }
-
-        // Validate at least one emergency contact
-        const validContacts = emergencyContacts.filter(c => c.name.trim() && c.phone.trim());
-        if (validContacts.length === 0) {
-          toast({
-            title: "Emergency Contact Required",
-            description: "Please add at least one emergency contact",
-            variant: "destructive"
-          });
-          setSaving(false);
-          return;
-        }
-
-        // Validate all contacts
-        for (const contact of validContacts) {
-          if (!isValidName(contact.name)) {
-            toast({
-              title: "Invalid Contact Name",
-              description: `Please enter a valid name for ${contact.name || 'contact'}`,
-              variant: "destructive"
-            });
-            setSaving(false);
-            return;
-          }
-
-          const phoneError = getPhoneErrorMessage(contact.phone);
-          if (phoneError) {
-            toast({
-              title: "Invalid Contact Phone",
-              description: `${contact.name}: ${phoneError}`,
-              variant: "destructive"
-            });
-            setSaving(false);
-            return;
-          }
-
-          if (contact.email && !isValidEmail(contact.email)) {
-            toast({
-              title: "Invalid Email",
-              description: `Please enter a valid email for ${contact.name}`,
-              variant: "destructive"
-            });
-            setSaving(false);
-            return;
-          }
-        }
-        
-        // Update or create profile
-        const normalizedPhone = normalizeBDPhone(formData.phone);
-        const sanitizedName = sanitizeText(formData.fullName);
-        const sanitizedAddress = sanitizeText(formData.address);
-        
-        try {
-          await updateProfile({
-            full_name: sanitizedName,
-            phone_number: normalizedPhone,
-            blood_type: formData.bloodGroup as any || null,
-            address: sanitizedAddress || null,
-          });
-        } catch (profileError: any) {
-          // If profile doesn't exist, create it
-          if (profileError.message?.includes('No rows') || profileError.code === 'PGRST116') {
-            await profileService.createProfile({
-              user_id: user.id,
-              full_name: sanitizedName,
-              phone_number: normalizedPhone,
-              blood_type: formData.bloodGroup as any || null,
-              address: sanitizedAddress || null,
-              location_sharing_enabled: true,
-              updated_at: new Date().toISOString(),
-            });
-          } else {
-            throw profileError;
-          }
-        }
-
-        // Save emergency contacts with individual timeout handling
-        let savedCount = 0;
-        const failedContacts: string[] = [];
-        
-        for (const [i, contact] of validContacts.entries()) {
-          try {
-            await Promise.race([
-              contactsService.createContact({
-                user_id: user.id,
-                name: sanitizeText(contact.name),
-                phone_number: normalizeBDPhone(contact.phone),
-                email: contact.email ? normalizeEmail(contact.email) : null,
-                relationship: sanitizeText(contact.relationship) || null,
-                is_primary: i === 0, // First contact is primary
-              }),
-              new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('timeout')), 8000)
-              )
-            ]);
-            savedCount++;
-          } catch (err: any) {
-            if (import.meta.env.DEV) {
-              console.error(`Failed to save contact ${contact.name}:`, err);
-            }
-            failedContacts.push(contact.name);
-          }
-        }
-        
-        // Navigate even if some contacts failed, as long as profile is saved
-        if (savedCount > 0) {
-          toast({
-            title: "Setup Complete! 🎉",
-            description: failedContacts.length > 0 
-              ? `Profile saved. ${savedCount} contact(s) added. ${failedContacts.length} failed - you can add them later.`
-              : "Your profile and emergency contacts have been saved"
-          });
-          // Force navigation after a brief delay to ensure toast is visible
-          setTimeout(() => {
-            navigate("/dashboard", { replace: true });
-          }, 1500);
-        } else {
-          throw new Error('Failed to save any contacts. Please try again.');
-        }
-      } catch (error: any) {
-        if (import.meta.env.DEV) {
-          console.error('Setup error:', error);
-        }
-        
-        let errorMessage = "Could not save profile. Please try again.";
-        
-        if (error?.message?.includes('timeout')) {
-          errorMessage = "Operation timed out. Your profile was saved, but contacts may need to be added manually from the Contacts page.";
-          // Still navigate if profile was saved
-          setTimeout(() => {
-            navigate("/dashboard", { replace: true });
-          }, 3000);
-        } else if (error?.message?.includes('duplicate key')) {
-          errorMessage = "This contact already exists. Please use a different phone number.";
-        } else if (error?.message?.includes('foreign key')) {
-          errorMessage = "Profile setup error. Please try logging out and back in.";
-        } else if (error?.message?.includes('Network') || error?.message?.includes('fetch')) {
-          errorMessage = "Network error. Please check your connection and try again.";
-        } else if (error?.message) {
-          errorMessage = error.message;
-        }
-        
-        toast({
-          title: "Error",
-          description: errorMessage,
-          variant: "destructive",
-          duration: 8000,
-        });
-      } finally {
-        setSaving(false);
-      }
+      // Just navigate to dashboard - skip setup entirely
+      toast({
+        title: "Welcome! 👋",
+        description: "You can add emergency contacts from the Contacts page anytime"
+      });
+      navigate("/dashboard", { replace: true });
     }
   };
 
@@ -486,7 +302,7 @@ const Setup = () => {
 
       {/* Navigation Buttons */}
       <div className="fixed bottom-8 left-6 right-6 flex gap-3">
-        {step > 1 && (
+        {step > 1 ? (
           <Button
             variant="outline"
             onClick={() => setStep(step - 1)}
@@ -494,6 +310,21 @@ const Setup = () => {
             disabled={saving}
           >
             {t("setup.back")}
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            onClick={() => {
+              toast({
+                title: "Setup Skipped",
+                description: "You can set up your profile from Settings later"
+              });
+              navigate("/dashboard", { replace: true });
+            }}
+            className="flex-1 h-12 rounded-full"
+            disabled={saving}
+          >
+            Skip Setup
           </Button>
         )}
         <Button
@@ -507,7 +338,7 @@ const Setup = () => {
               Saving...
             </div>
           ) : (
-            step === 3 ? t("setup.completeSetup") : t("setup.continue")
+            step === 3 ? "Complete" : t("setup.continue")
           )}
         </Button>
       </div>

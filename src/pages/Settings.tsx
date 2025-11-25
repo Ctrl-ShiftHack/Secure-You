@@ -168,13 +168,14 @@ const Settings = () => {
   ];
 
   // Dialog states
-  const [dialogOpen, setDialogOpen] = useState<'name' | 'phone' | 'address' | 'password' | 'email' | null>(null);
+  const [dialogOpen, setDialogOpen] = useState<'name' | 'phone' | 'address' | 'bloodType' | 'password' | 'email' | null>(null);
   const [saving, setSaving] = useState(false);
   
   // Form states
   const [nameValue, setNameValue] = useState("");
   const [phoneValue, setPhoneValue] = useState("");
   const [addressValue, setAddressValue] = useState("");
+  const [bloodTypeValue, setBloodTypeValue] = useState("");
   
   // Password update states
   const [currentPassword, setCurrentPassword] = useState("");
@@ -198,11 +199,12 @@ const Settings = () => {
     } catch (e) {}
   }, [dark]);
 
-  const openDialog = (type: 'name' | 'phone' | 'address' | 'password' | 'email') => {
+  const openDialog = (type: 'name' | 'phone' | 'address' | 'bloodType' | 'password' | 'email') => {
     // Prefill current values
     if (type === 'name') setNameValue(profile?.full_name || '');
     if (type === 'phone') setPhoneValue(profile?.phone_number || '');
     if (type === 'address') setAddressValue(profile?.address || '');
+    if (type === 'bloodType') setBloodTypeValue(profile?.blood_type || '');
     if (type === 'email') setNewEmail(user?.email || '');
     
     // Reset password fields
@@ -240,10 +242,11 @@ const Settings = () => {
       }
 
       setSaving(true);
+      // Optimized: Direct update without reload
       await updateProfile({ full_name: sanitizeText(nameValue) });
       
       toast({
-        title: "Success",
+        title: "Updated",
         description: "Name updated successfully"
       });
       closeDialog();
@@ -283,7 +286,7 @@ const Settings = () => {
       await updateProfile({ phone_number: normalizeBDPhone(phoneValue) });
       
       toast({
-        title: "Success",
+        title: "Updated",
         description: "Phone number updated successfully"
       });
       closeDialog();
@@ -313,7 +316,7 @@ const Settings = () => {
       await updateProfile({ address: sanitizeText(addressValue) });
       
       toast({
-        title: "Success",
+        title: "Updated",
         description: "Address updated successfully"
       });
       closeDialog();
@@ -321,6 +324,27 @@ const Settings = () => {
       toast({
         title: "Error",
         description: error?.message || "Failed to update address",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveBloodType = async () => {
+    try {
+      setSaving(true);
+      await updateProfile({ blood_type: bloodTypeValue as any || null });
+      
+      toast({
+        title: "Updated",
+        description: "Blood type updated successfully"
+      });
+      closeDialog();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to update blood type",
         variant: "destructive"
       });
     } finally {
@@ -504,8 +528,9 @@ const Settings = () => {
             {[
               { icon: User, label: t("settings.updateName"), value: profile?.full_name || "Not set", type: "name" as const },
               { icon: Mail, label: "Update Email", value: user?.email || "Not set", type: "email" as const },
-              { icon: Lock, label: t("settings.updatePassword"), value: "••••••••", type: "password" as const },
+              { icon: Lock, label: t("settings.updatePassword"), value: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", type: "password" as const },
               { icon: Phone, label: t("settings.updatePhone"), value: profile?.phone_number ? formatBDPhone(profile.phone_number) : "Not set", type: "phone" as const },
+              { icon: AlertCircle, label: "Blood Type", value: profile?.blood_type || "Not set", type: "bloodType" as const },
               { icon: MapPin, label: t("settings.updateAddress"), value: profile?.address || "Not set", type: "address" as const },
             ].map((setting, index) => (
               <button
@@ -959,6 +984,59 @@ const Settings = () => {
                 </div>
               ) : (
                 "Update Email"
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Blood Type Update Dialog */}
+      <Dialog open={dialogOpen === 'bloodType'} onOpenChange={closeDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Update Blood Type</DialogTitle>
+            <DialogDescription>
+              Select your blood type. This information is useful for emergency situations.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="bloodType">Blood Type</Label>
+              <select
+                id="bloodType"
+                value={bloodTypeValue}
+                onChange={(e) => setBloodTypeValue(e.target.value)}
+                className="w-full h-12 px-3 rounded-lg border border-input bg-background text-foreground outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">Select blood type</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+              </select>
+              <p className="text-xs text-muted-foreground">
+                This will be shown to emergency responders
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={closeDialog} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveBloodType} disabled={saving} className="min-w-24">
+              {saving ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Saving
+                </div>
+              ) : (
+                "Save"
               )}
             </Button>
           </div>
