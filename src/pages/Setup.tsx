@@ -34,7 +34,15 @@ const Setup = () => {
   const { toast } = useToast();
   const { t } = useI18n();
   const { user, profile, updateProfile } = useAuth();
-
+  const goToDashboard = (opts?: { title?: string; description?: string }) => {
+    if (redirecting) return;
+    setRedirecting(true);
+    // Use i18n keys when available, fall back to provided literals
+    const title = opts?.title ? opts.title : t("setup.skippedTitle") || "Setup Skipped";
+    const description = opts?.description ? opts.description : t("setup.skippedMsg") || "You can set up your profile from Settings later";
+    toast({ title, description });
+    navigate("/dashboard", { replace: true });
+  };
   // Load user data when component mounts
   useEffect(() => {
     if (user) {
