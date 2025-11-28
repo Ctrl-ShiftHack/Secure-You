@@ -1,4 +1,4 @@
-import { Phone, Mail, MoreVertical, Edit, Trash, Star } from "lucide-react";
+import { Phone, Mail, MoreVertical, Edit, Trash, Star, MapPin, Navigation } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
@@ -24,12 +24,15 @@ interface ContactCardProps {
   phone: string;
   email?: string | null;
   isPrimary?: boolean;
+  address?: string | null;
+  distance?: string;
   onEdit?: () => void;
   onDelete?: () => void;
   onCall?: () => void;
+  onNavigate?: () => void;
 }
 
-export const ContactCard = ({ name, relation, phone, email, isPrimary, onEdit, onDelete, onCall }: ContactCardProps) => {
+export const ContactCard = ({ name, relation, phone, email, isPrimary, address, distance, onEdit, onDelete, onCall, onNavigate }: ContactCardProps) => {
   const [openDelete, setOpenDelete] = useState(false);
 
   return (
@@ -68,7 +71,19 @@ export const ContactCard = ({ name, relation, phone, email, isPrimary, onEdit, o
               <span className="truncate max-w-[150px]">{email}</span>
             </div>
           )}
+          {distance && (
+            <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
+              <MapPin className="w-3.5 h-3.5" />
+              <span>{distance}</span>
+            </div>
+          )}
         </div>
+        {address && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+            <MapPin className="w-3 h-3" />
+            <span className="truncate">{address}</span>
+          </div>
+        )}
       </div>
 
       {/* Actions */}
@@ -84,6 +99,19 @@ export const ContactCard = ({ name, relation, phone, email, isPrimary, onEdit, o
           <Phone className="w-4 h-4" />
         </Button>
         
+        {/* Navigate button (if address/location available) */}
+        {(address || onNavigate) && (
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="text-blue-600 hover:bg-blue-50 hover:text-blue-700 h-9 w-9"
+            onClick={onNavigate}
+            title="Navigate"
+          >
+            <Navigation className="w-4 h-4" />
+          </Button>
+        )}
+        
         {/* More options dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -91,8 +119,7 @@ export const ContactCard = ({ name, relation, phone, email, isPrimary, onEdit, o
               <MoreVertical className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={onEdit}>
+          <DropdownMenuContent align="end">\n            <DropdownMenuItem onSelect={onEdit}>
               <Edit className="w-4 h-4 mr-2" /> Edit
             </DropdownMenuItem>
             <DropdownMenuSeparator />

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, MapPin, Users, BellOff, AlertCircle, Image, Phone, Wifi, WifiOff } from "lucide-react";
+import { Shield, MapPin, Users, BellOff, AlertCircle, Image, Phone, Wifi, WifiOff, Hospital, Navigation } from "lucide-react";
 import { SOSButton } from "@/components/SOSButton";
 import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
@@ -12,12 +12,14 @@ import { getEmergencyContacts, queueSOSAlert, isOnline, getCacheStatus } from "@
 import { startBackgroundTracking, stopBackgroundTracking, isTrackingActive, enableAutoLocationSharing } from "@/lib/backgroundTracking";
 import { supabase } from "@/lib/supabase";
 import type { EmergencyContact } from "@/types/database.types";
+import { findEmergencyFacilities, formatDistance } from "@/lib/googleMapsServices";
 
 const Dashboard = () => {
   const [isSOS, setIsSOS] = useState(false);
   const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([]);
   const [isOffline, setIsOffline] = useState(!isOnline());
   const [lastSOSTime, setLastSOSTime] = useState<number | null>(null);
+  const [nearestHospital, setNearestHospital] = useState<{ name: string; distance: string } | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useI18n();
@@ -28,7 +30,7 @@ const Dashboard = () => {
   const initials = (profile?.name || "").split(" ").map(s => s[0] || "").slice(0,2).join("").toUpperCase();
   const frontName = (profile?.name || "").split(" ")[0] || profile?.name || "";
 
-  // Load emergency contacts (offline-aware)
+  // Load emergency contacts and find nearest hospital
   useEffect(() => {
     const loadContacts = async () => {
       try {
@@ -42,7 +44,26 @@ const Dashboard = () => {
       }
     };
     
+    const loadNearestHospital = async () => {
+      try {
+        const location = await getCurrentLocation();
+        if (location && window.google) {
+          const facilities = await findEmergencyFacilities(location, 5000);
+          if (facilities.hospitals.length > 0) {
+            const hospital = facilities.hospitals[0];
+            setNearestHospital({
+              name: hospital.name,
+              distance: hospital.distance ? formatDistance(hospital.distance) : 'N/A'
+            });
+          }
+        }
+      } catch (error) {
+        console.log('Could not load nearest hospital:', error);
+      }
+    };
+    
     loadContacts();
+    loadNearestHospital();
 
     // Monitor online/offline status
     const handleOnline = () => setIsOffline(false);
@@ -250,6 +271,29 @@ const Dashboard = () => {
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
             Quick Actions
           </h3>
+          
+          {/* Nearest Hospital Card */}
+          {nearestHospital && (
+            <button
+              onClick={() => navigate("/emergency-facilities")}
+              className="w-full bg-gradient-to-r from-red-500/10 to-pink-500/10 p-4 rounded-2xl shadow-soft border border-red-200 dark:border-red-900 hover:shadow-medium transition-all"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                  <Hospital className="w-6 h-6 text-red-600 dark:text-red-400" />
+                </div>
+                <div className="flex-1 text-left min-w-0">
+                  <div className="font-semibold text-foreground text-sm mb-0.5">Nearest Hospital</div>
+                  <div className="text-xs text-muted-foreground truncate">{nearestHospital.name}</div>
+                  <div className="text-xs text-red-600 dark:text-red-400 font-medium mt-1">
+                    📍 {nearestHospital.distance} away
+                  </div>
+                </div>
+                <Navigation className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
+              </div>
+            </button>
+          )}
+          
           {quickActions.map((action) => (
             <button
               key={action.label}

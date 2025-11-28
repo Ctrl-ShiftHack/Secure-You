@@ -8,7 +8,8 @@ import useProfile from "@/hooks/use-profile";
 import { getCurrentLocation, getGoogleMapsLink } from "@/lib/emergency";
 import { supabase } from "@/lib/supabase";
 import GoogleMapComponent from "@/components/GoogleMap";
-import { reverseGeocode } from "@/lib/googleMapsServices";
+import { reverseGeocode, geocodeAddress } from "@/lib/googleMapsServices";
+import type { EmergencyContact } from "@/types/database.types";
 
 function Map() {
   const { toast } = useToast();
@@ -21,18 +22,44 @@ function Map() {
   const [liveTracking, setLiveTracking] = useState(false);
   const [contactsCount, setContactsCount] = useState(0);
   const [showTraffic, setShowTraffic] = useState(false);
+  const [showContacts, setShowContacts] = useState(false);
+  const [contactMarkers, setContactMarkers] = useState<Array<{ id: string; position: { lat: number; lng: number }; label: string }>>([]);
 
-  // Get emergency contacts count
+  // Get emergency contacts count and load contact locations
   useEffect(() => {
     const fetchContacts = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: contacts } = await supabase
           .from('emergency_contacts')
-          .select('id')
+          .select('*')
           .eq('user_id', user.id);
         
         setContactsCount(contacts?.length || 0);
+        
+        // Geocode contact addresses to show on map
+        if (contacts && contacts.length > 0 && window.google) {
+          const markers: Array<{ id: string; position: { lat: number; lng: number }; label: string }> = [];
+          
+          for (const contact of contacts) {
+            if (contact.address) {
+              try {
+                const location = await geocodeAddress(contact.address);
+                if (location) {
+                  markers.push({
+                    id: contact.id,
+                    position: location,
+                    label: `${contact.name} (${contact.relationship})`
+                  });
+                }
+              } catch (err) {
+                console.log(`Could not geocode ${contact.name}:`, err);
+              }
+            }
+          }
+          
+          setContactMarkers(markers);
+        }
       }
     };
     fetchContacts();
@@ -174,7 +201,8 @@ function Map() {
           onLocationUpdate={handleLocationUpdate}
           enableLiveTracking={liveTracking}
           showTraffic={showTraffic}
-          zoom={16}
+          markers={showContacts ? contactMarkers : []}
+          zoom={showContacts && contactMarkers.length > 0 ? 13 : 16}
         />
       </div>
 
@@ -234,6 +262,18 @@ function Map() {
               Maps
             </Button>
           </div>
+
+          {/* Show Contacts Toggle */}
+          {contactMarkers.length > 0 && (
+            <Button
+              onClick={() => setShowContacts(!showContacts)}
+              variant={showContacts ? "default" : "outline"}
+              className="w-full h-11 rounded-xl font-semibold mb-3"
+            >
+              <Users className="w-4 h-4 mr-2" />
+              {showContacts ? `Showing ${contactMarkers.length} Contacts` : `Show ${contactMarkers.length} Contacts on Map`}
+            </Button>
+          )}
 
           {/* Quick Access Buttons */}
           <div className="grid grid-cols-2 gap-2 mb-3">

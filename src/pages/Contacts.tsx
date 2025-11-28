@@ -20,6 +20,8 @@ import { contactsService } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import type { EmergencyContact } from "@/types/database.types";
 import { formatBDPhone } from "@/lib/validation";
+import { getCurrentLocation } from "@/lib/emergency";
+import { calculateDistance, formatDistance, geocodeAddress } from "@/lib/googleMapsServices";
 
 const governmentHelplines = [
   { name: "Police (National Emergency)", phone: "999", relation: "Emergency" },
@@ -38,6 +40,7 @@ const Contacts = () => {
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [contactToDelete, setContactToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [contactDistances, setContactDistances] = useState<Record<string, string>>({});
 
   // Load contacts from Supabase
   useEffect(() => {
@@ -55,6 +58,37 @@ const Contacts = () => {
       setLoading(true);
       const data = await contactsService.getContacts(user.id);
       setContacts(data);
+      
+      // Calculate distances for contacts with addresses
+      if (window.google) {
+        try {
+          const userLocation = await getCurrentLocation();
+          const distances: Record<string, string> = {};
+          
+          for (const contact of data) {
+            if (contact.address) {
+              try {
+                const contactLocation = await geocodeAddress(contact.address);
+                if (contactLocation) {
+                  const distance = calculateDistance(
+                    userLocation.lat,
+                    userLocation.lng,
+                    contactLocation.lat,
+                    contactLocation.lng
+                  );
+                  distances[contact.id] = formatDistance(distance);
+                }
+              } catch (err) {
+                console.log(`Could not geocode ${contact.name}:`, err);
+              }
+            }
+          }
+          
+          setContactDistances(distances);
+        } catch (err) {
+          console.log('Could not calculate distances:', err);
+        }
+      }
     } catch (error: any) {
       console.error('Error loading contacts:', error);
       toast({
@@ -108,6 +142,41 @@ const Contacts = () => {
     window.location.href = `tel:${phone}`;
   };
 
+  const handleNavigate = async (contact: EmergencyContact) => {
+    if (!contact.address) {
+      toast({
+        title: "No Address",
+        description: "This contact doesn't have an address set",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const userLocation = await getCurrentLocation();
+      const contactLocation = await geocodeAddress(contact.address);
+      
+      if (contactLocation) {
+        // Open in Google Maps with directions
+        const url = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${contactLocation.lat},${contactLocation.lng}`;
+        window.open(url, '_blank');
+      } else {
+        toast({
+          title: "Address Not Found",
+          description: "Could not find location for this address",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Navigation error:', error);
+      toast({
+        title: "Navigation Error",
+        description: "Could not start navigation",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
@@ -159,6 +228,14 @@ const Contacts = () => {
                   relation={contact.relationship || "Contact"}
                   phone={formatBDPhone(contact.phone_number)}
                   email={contact.email}
+                  address={contact.address}
+                  distance={contactDistances[contact.id]}
+                  isPrimary={contact.is_primary}
+                  onEdit={() => handleEdit(contact.id)}
+                  onDelete={() => handleDeleteClick(contact.id, contact.name)}
+                  onCall={() => handleCall(contact.phone_number)}
+                  onNavigate={contact.address ? () => handleNavigate(contact) : undefined}
+                />
                   isPrimary={contact.is_primary}
                   onEdit={() => handleEdit(contact.id)}
                   onDelete={() => handleDeleteClick(contact.id, contact.name)}
