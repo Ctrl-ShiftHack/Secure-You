@@ -14,45 +14,99 @@ const VerifyEmail = () => {
   useEffect(() => {
     const verifyEmail = async () => {
       try {
-        // Get the hash from URL (Supabase email confirmation includes #access_token)
+        console.log('🔍 VerifyEmail: Starting verification');
+        console.log('  - Full URL:', window.location.href);
+        console.log('  - Hash:', window.location.hash);
+        
+        // Check URL hash for Supabase auth tokens
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
         const type = hashParams.get('type');
+        const tokenType = hashParams.get('token_type');
+        
+        console.log('  - Parameters found:');
+        console.log('    - access_token:', accessToken ? '✓ Present' : '✗ Missing');
+        console.log('    - refresh_token:', refreshToken ? '✓ Present' : '✗ Missing');
+        console.log('    - type:', type || 'none');
+        console.log('    - token_type:', tokenType || 'none');
 
-        if (type === 'signup' && accessToken) {
-          // Set the session with the token
-          const { error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: hashParams.get('refresh_token') || '',
-          });
-
-          if (error) throw error;
-
-          setStatus('success');
-          setMessage('Email verified successfully! 🎉');
+        // Check if we have the required tokens
+        if (accessToken && refreshToken) {
+          console.log('✓ Tokens found, setting session...');
           
-          toast({
-            title: "Email Verified!",
-            description: "Your account has been activated. You can now complete your profile setup.",
-            duration: 5000,
+          // Set the session with the tokens
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
           });
 
-          // Redirect to setup page after 2 seconds
+          console.log('  - Session result:', { data, error });
+
+          if (error) {
+            console.error('❌ Session error:', error);
+            throw error;
+          }
+
+          if (data?.session) {
+            console.log('✅ Session established!');
+            console.log('  - User:', data.user?.email);
+            
+            setStatus('success');
+            setMessage('Email verified successfully! 🎉');
+            
+            toast({
+              title: "Email Verified!",
+              description: "Your account has been activated. You can now complete your profile setup.",
+              duration: 5000,
+            });
+
+            // Redirect to setup page after 2 seconds
+            setTimeout(() => {
+              console.log('➡️  Redirecting to /setup');
+              navigate('/setup');
+            }, 2000);
+          } else {
+            throw new Error('Session created but no session data returned');
+          }
+        } else if (type === 'recovery') {
+          // Password recovery link
+          console.log('🔑 Password recovery link detected');
+          setStatus('success');
+          setMessage('Password reset link verified!');
           setTimeout(() => {
-            navigate('/setup');
-          }, 2000);
+            navigate('/reset-password');
+          }, 1000);
         } else {
-          throw new Error('Invalid verification link');
+          console.error('❌ Invalid verification link');
+          console.log('  - Missing required tokens');
+          throw new Error('Invalid verification link - missing authentication tokens');
         }
       } catch (error: any) {
-        console.error('Email verification error:', error);
+        console.error('❌ Email verification error:', error);
+        console.error('  - Message:', error?.message);
+        console.error('  - Code:', error?.code);
+        console.error('  - Stack:', error?.stack);
+        
         setStatus('error');
-        setMessage(error?.message || 'Failed to verify email. Please try again or contact support.');
+        
+        let errorMessage = 'Failed to verify email. ';
+        
+        if (error?.message?.includes('expired')) {
+          errorMessage += 'The verification link has expired. Please sign up again.';
+        } else if (error?.message?.includes('invalid')) {
+          errorMessage += 'The verification link is invalid. Please check your email or sign up again.';
+        } else {
+          errorMessage += error?.message || 'Please try again or contact support.';
+        }
+        
+        setMessage(errorMessage);
         
         toast({
           title: "Verification Failed",
-          description: "The verification link may be expired or invalid.",
+          description: errorMessage,
           variant: "destructive",
+          duration: 8000,
         });
       }
     };
