@@ -26,7 +26,20 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Allow access to all protected routes once authenticated
-  // Users can optionally complete their profile via /setup
+  // Check if user needs to complete profile setup
+  // Skip this check if already on setup page or verify-email page
+  const isOnSetupPage = location.pathname === '/setup';
+  const isOnVerifyPage = location.pathname === '/verify-email';
+  
+  if (!isOnSetupPage && !isOnVerifyPage && profile) {
+    // Check if profile is incomplete (new user)
+    const hasMinimalInfo = profile.full_name && profile.phone_number;
+    
+    if (!hasMinimalInfo) {
+      console.log('🔄 Redirecting to setup - incomplete profile');
+      return <Navigate to="/setup" replace />;
+    }
+  }
+
   return <>{children}</>;
 };

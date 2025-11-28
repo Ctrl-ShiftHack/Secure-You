@@ -63,15 +63,126 @@ const Setup = () => {
   }, [user, profile]);
 
   const handleNext = async () => {
-    if (step < 3) {
-      setStep(step + 1);
-    } else {
-      // Just navigate to dashboard - skip setup entirely
-      toast({
-        title: "Welcome! 👋",
-        description: "You can add emergency contacts from the Contacts page anytime"
-      });
-      navigate("/dashboard", { replace: true });
+    if (step === 1) {
+      // Validate personal info before moving to step 2
+      if (!formData.fullName.trim()) {
+        toast({
+          title: "Required Field",
+          description: "Please enter your full name",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (!isValidName(formData.fullName)) {
+        toast({
+          title: "Invalid Name",
+          description: "Please enter a valid name (at least 2 characters)",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (!formData.phone.trim()) {
+        toast({
+          title: "Required Field",
+          description: "Please enter your phone number",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const phoneError = getPhoneErrorMessage(formData.phone);
+      if (phoneError) {
+        toast({
+          title: "Invalid Phone Number",
+          description: phoneError,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setStep(2);
+    } else if (step === 2) {
+      // Save profile data before moving to step 3
+      setSaving(true);
+      try {
+        console.log('📝 Saving profile data...');
+        await updateProfile({
+          full_name: sanitizeText(formData.fullName),
+          phone_number: normalizeBDPhone(formData.phone),
+          blood_type: formData.bloodGroup || null,
+          address: formData.address ? sanitizeText(formData.address) : null,
+        });
+        
+        console.log('✅ Profile saved!');
+        toast({
+          title: "Profile Saved",
+          description: "Your information has been saved successfully"
+        });
+        
+        setStep(3);
+      } catch (error: any) {
+        console.error('❌ Error saving profile:', error);
+        toast({
+          title: "Error",
+          description: error?.message || "Failed to save profile. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setSaving(false);
+      }
+    } else if (step === 3) {
+      // Save emergency contacts and complete setup
+      setSaving(true);
+      try {
+        console.log('📝 Saving emergency contacts...');
+        
+        // Save valid contacts
+        const validContacts = emergencyContacts.filter(c => c.name.trim() && c.phone.trim());
+        
+        for (const contact of validContacts) {
+          const phoneError = getPhoneErrorMessage(contact.phone);
+          if (phoneError) {
+            toast({
+              title: "Invalid Contact",
+              description: `${contact.name}: ${phoneError}`,
+              variant: "destructive"
+            });
+            setSaving(false);
+            return;
+          }
+          
+          await contactsService.createContact({
+            user_id: user!.id,
+            name: sanitizeText(contact.name),
+            phone_number: normalizeBDPhone(contact.phone),
+            email: contact.email ? normalizeEmail(contact.email) : null,
+            relationship: contact.relationship ? sanitizeText(contact.relationship) : null,
+          });
+        }
+        
+        console.log('✅ Emergency contacts saved!');
+        
+        toast({
+          title: "Setup Complete! 🎉",
+          description: "Welcome to Secure You! Your profile is ready.",
+          duration: 5000
+        });
+        
+        navigate("/dashboard", { replace: true });
+      } catch (error: any) {
+        console.error('❌ Error saving contacts:', error);
+        toast({
+          title: "Error",
+          description: error?.message || "Failed to save emergency contacts. You can add them later from Contacts page.",
+          variant: "destructive"
+        });
+        // Still allow navigation to dashboard
+        setTimeout(() => navigate("/dashboard", { replace: true }), 2000);
+      } finally {
+        setSaving(false);
+      }
     }
   };
 
@@ -93,6 +204,14 @@ const Setup = () => {
     <div className="min-h-screen bg-background px-6 py-8">
       {/* Header */}
       <div className="mb-8">
+        {step === 1 && (
+          <div className="mb-6 p-4 bg-primary/10 rounded-2xl border border-primary/20">
+            <h2 className="text-lg font-semibold text-foreground mb-1">👋 Welcome to Secure You!</h2>
+            <p className="text-sm text-muted-foreground">
+              Let's set up your profile so your emergency contacts can reach you easily.
+            </p>
+          </div>
+        )}
   <h1 className="text-2xl font-bold text-foreground mb-2">{t("setup.title")}</h1>
   <p className="text-muted-foreground">{t("setup.stepOf").replace("{step}", String(step))}</p>
         
@@ -311,7 +430,7 @@ const Setup = () => {
 
       {/* Navigation Buttons */}
       <div className="fixed bottom-8 left-6 right-6 flex gap-3">
-        {step > 1 ? (
+        {step > 1 && (
           <Button
             variant="outline"
             onClick={() => setStep(step - 1)}
@@ -320,34 +439,19 @@ const Setup = () => {
           >
             {t("setup.back")}
           </Button>
-        ) : (
-          <Button
-            variant="ghost"
-            onClick={() => {
-              toast({
-                title: "Setup Skipped",
-                description: "You can set up your profile from Settings later"
-              });
-              navigate("/dashboard", { replace: true });
-            }}
-            className="flex-1 h-12 rounded-full"
-            disabled={saving}
-          >
-            Skip Setup
-          </Button>
         )}
         <Button
           onClick={handleNext}
           disabled={saving}
-          className="flex-1 h-12 rounded-full gradient-primary text-white font-semibold"
+          className={`${step === 1 ? 'w-full' : 'flex-1'} h-12 rounded-full gradient-primary text-white font-semibold`}
         >
           {saving ? (
             <div className="flex items-center gap-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              Saving...
+              {step === 2 ? 'Saving Profile...' : step === 3 ? 'Completing...' : 'Saving...'}
             </div>
           ) : (
-            step === 3 ? "Complete" : t("setup.continue")
+            step === 1 ? "Continue" : step === 2 ? "Save & Continue" : "Complete Setup"
           )}
         </Button>
       </div>

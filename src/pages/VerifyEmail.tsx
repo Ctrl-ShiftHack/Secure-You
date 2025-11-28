@@ -56,16 +56,16 @@ const VerifyEmail = () => {
             setMessage('Email verified successfully! 🎉');
             
             toast({
-              title: "Email Verified!",
-              description: "Your account has been activated. You can now complete your profile setup.",
+              title: "Email Verified! 🎉",
+              description: "Let's set up your profile to get started.",
               duration: 5000,
             });
 
-            // Redirect to setup page after 2 seconds
+            // Redirect to setup page after 1.5 seconds
             setTimeout(() => {
               console.log('➡️  Redirecting to /setup');
-              navigate('/setup');
-            }, 2000);
+              navigate('/setup', { replace: true });
+            }, 1500);
           } else {
             throw new Error('Session created but no session data returned');
           }
