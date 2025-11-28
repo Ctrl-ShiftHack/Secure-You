@@ -11,27 +11,43 @@ BEGIN
   RAISE NOTICE '🔍 Step 1: Checking current RLS policies...';
 END $$;
 
--- Drop all existing policies (will recreate them correctly)
+-- Drop all existing policies (both old and new names)
 DROP POLICY IF EXISTS "Users can view their own profile" ON profiles;
 DROP POLICY IF EXISTS "Users can insert their own profile" ON profiles;
 DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
 DROP POLICY IF EXISTS "Users can delete their own profile" ON profiles;
+DROP POLICY IF EXISTS "profiles_select_policy" ON profiles;
+DROP POLICY IF EXISTS "profiles_insert_policy" ON profiles;
+DROP POLICY IF EXISTS "profiles_update_policy" ON profiles;
+DROP POLICY IF EXISTS "profiles_delete_policy" ON profiles;
 
 DROP POLICY IF EXISTS "Users can view their own contacts" ON emergency_contacts;
 DROP POLICY IF EXISTS "Users can insert their own contacts" ON emergency_contacts;
 DROP POLICY IF EXISTS "Users can update their own contacts" ON emergency_contacts;
 DROP POLICY IF EXISTS "Users can delete their own contacts" ON emergency_contacts;
+DROP POLICY IF EXISTS "contacts_select_policy" ON emergency_contacts;
+DROP POLICY IF EXISTS "contacts_insert_policy" ON emergency_contacts;
+DROP POLICY IF EXISTS "contacts_update_policy" ON emergency_contacts;
+DROP POLICY IF EXISTS "contacts_delete_policy" ON emergency_contacts;
 
 DROP POLICY IF EXISTS "Users can view their own incidents" ON incidents;
 DROP POLICY IF EXISTS "Users can insert their own incidents" ON incidents;
 DROP POLICY IF EXISTS "Users can update their own incidents" ON incidents;
 DROP POLICY IF EXISTS "Users can delete their own incidents" ON incidents;
+DROP POLICY IF EXISTS "incidents_select_policy" ON incidents;
+DROP POLICY IF EXISTS "incidents_insert_policy" ON incidents;
+DROP POLICY IF EXISTS "incidents_update_policy" ON incidents;
+DROP POLICY IF EXISTS "incidents_delete_policy" ON incidents;
 
 -- Drop social feed policies if they exist
 DROP POLICY IF EXISTS "Anyone can view posts" ON incident_posts;
 DROP POLICY IF EXISTS "Users can create posts" ON incident_posts;
 DROP POLICY IF EXISTS "Users can update own posts" ON incident_posts;
 DROP POLICY IF EXISTS "Users can delete own posts" ON incident_posts;
+DROP POLICY IF EXISTS "posts_select_policy" ON incident_posts;
+DROP POLICY IF EXISTS "posts_insert_policy" ON incident_posts;
+DROP POLICY IF EXISTS "posts_update_policy" ON incident_posts;
+DROP POLICY IF EXISTS "posts_delete_policy" ON incident_posts;
 
 DO $$
 BEGIN
