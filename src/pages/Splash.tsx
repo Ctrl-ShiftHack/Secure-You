@@ -22,7 +22,7 @@ const Splash = () => {
       else {
         navigate("/login");
       }
-    }, 1500); // Reduced from 2000ms for better UX
+    }, 1000); // Reduced for better UX
 
     return () => clearTimeout(timer);
   }, [navigate, user, loading]);

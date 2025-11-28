@@ -114,8 +114,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setProfile(profileData);
     } catch (error: any) {
       // Profile might not exist yet (e.g., new user after email verification)
-      if (error?.code === 'PGRST116') { // PGRST116 = no rows returned
-        // Try to create profile from user metadata
+      if (error?.code === 'PGRST116' || error?.message?.includes('No rows')) {
+        // Try to create profile automatically from user metadata
         try {
           const { data: { user } } = await supabase.auth.getUser();
           if (user?.user_metadata?.full_name) {
@@ -127,15 +127,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             });
             setProfile(newProfile);
           } else {
-            // No metadata, profile will be created in setup page
-            setProfile(null);
+            // No metadata available, create minimal profile
+            const newProfile = await profileService.createProfile({
+              user_id: userId,
+              full_name: user?.email?.split('@')[0] || 'User',
+              phone_number: '',
+              updated_at: new Date().toISOString(),
+            });
+            setProfile(newProfile);
           }
         } catch (createError) {
           console.error('Could not auto-create profile:', createError);
+          // Still set profile to empty object to prevent redirect loops
           setProfile(null);
         }
       } else {
-        // Different error
         console.error('Error loading profile:', error);
         setProfile(null);
       }
@@ -248,10 +254,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    setProfile(null);
+    try {
+      // Clear local state first for immediate UI response
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      
+      // Then sign out from Supabase
+      await supabase.auth.signOut();
+      
+      // Clear any cached data
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch (error) {
+      console.error('Error signing out:', error);
+      // Even if sign out fails, clear local state
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      localStorage.clear();
+    }
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {

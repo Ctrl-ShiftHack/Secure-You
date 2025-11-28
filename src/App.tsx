@@ -84,7 +84,8 @@ const App = () => {
           <BrowserRouter>
             <AuthProvider>
               <Routes>
-                <Route path="/" element={<Splash />} />
+                <Route path="/" element={<Navigate to="/login" replace />} />
+                <Route path="/splash" element={<Splash />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/reset-password" element={<ResetPassword />} />

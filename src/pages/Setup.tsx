@@ -30,6 +30,7 @@ const Setup = () => {
     { name: "", phone: "", email: "", relationship: "" },
   ]);
   const [saving, setSaving] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useI18n();
