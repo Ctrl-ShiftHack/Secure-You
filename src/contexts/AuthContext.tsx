@@ -277,27 +277,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
+    console.log('\n🚀 AuthContext.updateProfile: Starting');
+    console.log('  - User:', user?.id);
+    console.log('  - Updates:', updates);
+    
     if (!user) {
-      console.error('updateProfile: No user logged in');
+      console.error('❌ No user logged in');
       throw new Error('No user logged in');
     }
     
-    console.log('updateProfile: Starting update', { userId: user.id, updates });
-    
     try {
+      console.log('✓ User validated, creating timeout promise...');
+      
       // Set a timeout for the update operation
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Update timeout - operation took too long')), 15000);
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          console.error('❌ Timeout reached (20 seconds)');
+          reject(new Error('Update timeout - operation took more than 20 seconds. Check your internet connection and Supabase configuration.'));
+        }, 20000); // 20 second timeout
       });
       
+      console.log('✓ Calling profileService.updateProfile...');
       const updatePromise = profileService.updateProfile(user.id, updates);
       
-      const updatedProfile = await Promise.race([updatePromise, timeoutPromise]) as Profile;
+      const updatedProfile = await Promise.race([updatePromise, timeoutPromise]);
       
-      console.log('updateProfile: Update successful', updatedProfile);
+      console.log('✅ AuthContext.updateProfile: Success!');
+      console.log('  - Updated profile:', updatedProfile);
+      
       setProfile(updatedProfile);
     } catch (error: any) {
-      console.error('updateProfile: Update failed', error);
+      console.error('❌ AuthContext.updateProfile: Failed');
+      console.error('  - Error:', error);
+      console.error('  - Message:', error?.message);
       throw new Error(error?.message || 'Failed to update profile');
     }
   };

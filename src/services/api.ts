@@ -38,26 +38,36 @@ export const profileService = {
   },
 
   async updateProfile(userId: string, updates: Partial<Profile>) {
-    console.log('profileService.updateProfile: Called', { userId, updates });
+    console.log('🔧 profileService.updateProfile: Called', { userId, updates });
     
     try {
-      // Validate userId
+      // Step 1: Validate userId
       if (!userId || userId.trim() === '') {
+        console.error('❌ Invalid user ID');
         throw new Error('Invalid user ID');
       }
+      console.log('✓ Step 1: User ID validated');
 
-      // Remove any undefined or null values from updates
+      // Step 2: Clean updates
       const cleanUpdates = Object.fromEntries(
         Object.entries(updates).filter(([_, v]) => v !== undefined && v !== null)
       );
       
-      console.log('profileService.updateProfile: Clean updates', cleanUpdates);
+      console.log('✓ Step 2: Clean updates', cleanUpdates);
 
       if (Object.keys(cleanUpdates).length === 0) {
+        console.error('❌ No valid fields to update');
         throw new Error('No valid fields to update');
       }
+      console.log('✓ Step 3: Fields validated');
 
-      console.log('profileService.updateProfile: Calling Supabase...');
+      // Step 3: Check Supabase connection
+      console.log('✓ Step 4: Calling Supabase update...');
+      console.log('  - Table: profiles');
+      console.log('  - Filter: user_id =', userId);
+      console.log('  - Update:', cleanUpdates);
+      
+      const startTime = Date.now();
       
       const { data, error } = await supabase
         .from('profiles')
@@ -66,33 +76,47 @@ export const profileService = {
         .select()
         .single();
       
-      console.log('profileService.updateProfile: Supabase response', { data, error });
+      const duration = Date.now() - startTime;
+      console.log(`✓ Step 5: Supabase responded in ${duration}ms`);
+      console.log('  - Data:', data);
+      console.log('  - Error:', error);
       
       if (error) {
-        console.error('Profile update error:', error);
+        console.error('❌ Profile update error:', error);
+        console.error('  - Code:', error.code);
+        console.error('  - Message:', error.message);
+        console.error('  - Details:', error.details);
+        console.error('  - Hint:', error.hint);
         
         // Provide specific error messages
         if (error.code === 'PGRST116') {
           throw new Error('Profile not found. Please try logging out and back in.');
         }
-        if (error.message.includes('violates row-level security')) {
-          throw new Error('Permission denied. Please run the database fix script.');
+        if (error.message.includes('violates row-level security') || error.code === '42501') {
+          throw new Error('Permission denied. RLS policy blocking update. Run COMPLETE_DATABASE_RESET.sql in Supabase.');
         }
-        if (error.message.includes('timeout')) {
+        if (error.message.includes('timeout') || error.code === 'PGRST301') {
           throw new Error('Database timeout. Please check your connection.');
+        }
+        if (error.message.includes('JWT')) {
+          throw new Error('Session expired. Please log out and back in.');
         }
         
         throw new Error(error.message || 'Failed to update profile');
       }
       
       if (!data) {
+        console.error('❌ No data returned after update');
         throw new Error('No data returned after update. Please try again.');
       }
       
-      console.log('profileService.updateProfile: Success!');
+      console.log('✅ profileService.updateProfile: Success!');
       return data as Profile;
     } catch (error: any) {
-      console.error('Update profile failed:', error);
+      console.error('❌ Update profile failed:', error);
+      console.error('  - Name:', error.name);
+      console.error('  - Message:', error.message);
+      console.error('  - Stack:', error.stack);
       throw error;
     }
   },

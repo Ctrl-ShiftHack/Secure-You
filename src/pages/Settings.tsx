@@ -222,8 +222,14 @@ const Settings = () => {
   };
 
   const handleSaveName = async () => {
+    console.log('\n═══════════════════════════════════════');
+    console.log('🎯 Settings.handleSaveName: Started');
+    console.log('═══════════════════════════════════════');
+    
     try {
+      console.log('Step 1: Validating name...');
       if (!nameValue.trim()) {
+        console.error('❌ Name is empty');
         toast({
           title: "Validation Error",
           description: "Name cannot be empty",
@@ -231,8 +237,10 @@ const Settings = () => {
         });
         return;
       }
+      console.log('✓ Name not empty');
 
       if (!isValidName(nameValue)) {
+        console.error('❌ Name format invalid');
         toast({
           title: "Invalid Name",
           description: "Please enter a valid name (at least 2 characters, letters and spaces only)",
@@ -240,15 +248,20 @@ const Settings = () => {
         });
         return;
       }
+      console.log('✓ Name format valid');
 
       setSaving(true);
-      console.log('handleSaveName: Starting update', { nameValue });
+      console.log('Step 2: Set saving state to true');
+      console.log('Step 3: Preparing to call updateProfile...');
+      console.log('  - Current name:', nameValue);
+      console.log('  - Sanitized name:', sanitizeText(nameValue));
       
       try {
-        // Optimized: Direct update without reload
+        console.log('Step 4: Calling updateProfile...');
         await updateProfile({ full_name: sanitizeText(nameValue) });
         
-        console.log('handleSaveName: Update successful');
+        console.log('✅ handleSaveName: Update successful!');
+        console.log('═══════════════════════════════════════\n');
         
         toast({
           title: "Updated",
@@ -256,28 +269,34 @@ const Settings = () => {
         });
         closeDialog();
       } catch (updateError: any) {
-        console.error('handleSaveName: Update failed', updateError);
+        console.error('❌ handleSaveName: Update failed in try block');
+        console.error('  - Error:', updateError);
         throw updateError;
       }
     } catch (error: any) {
-      console.error('handleSaveName: Error caught', error);
+      console.error('❌ handleSaveName: Error caught in outer catch');
+      console.error('  - Error:', error);
+      console.error('  - Message:', error?.message);
+      console.error('═══════════════════════════════════════\n');
       
       let errorMessage = error?.message || "Failed to update name";
       
       // Add helpful hints for common errors
       if (errorMessage.includes('timeout')) {
-        errorMessage += '. The database is taking too long to respond. Please check your internet connection.';
-      } else if (errorMessage.includes('row-level security')) {
-        errorMessage = 'Permission denied. Please run the database fix script from QUICK_DATABASE_FIX.md';
+        errorMessage += '\n\n💡 The database is taking too long. Check:\n• Internet connection\n• Supabase project status\n• Browser console for details';
+      } else if (errorMessage.includes('row-level security') || errorMessage.includes('Permission denied')) {
+        errorMessage = '🔒 Permission denied. RLS policies are blocking the update.\n\n📝 Fix: Run COMPLETE_DATABASE_RESET.sql in Supabase SQL Editor';
       } else if (errorMessage.includes('not found')) {
-        errorMessage += '. Please try logging out and back in.';
+        errorMessage += '\n\n💡 Profile not found. Try logging out and back in.';
+      } else if (errorMessage.includes('JWT') || errorMessage.includes('Session')) {
+        errorMessage = '🔐 Your session has expired. Please log out and back in.';
       }
       
       toast({
         title: "Error",
         description: errorMessage,
         variant: "destructive",
-        duration: 8000
+        duration: 10000
       });
     } finally {
       setSaving(false);
