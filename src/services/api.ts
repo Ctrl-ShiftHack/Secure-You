@@ -38,26 +38,65 @@ export const profileService = {
   },
 
   async updateProfile(userId: string, updates: Partial<Profile>) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('user_id', userId)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data as Profile;
+    try {
+      // Remove any undefined or null values from updates
+      const cleanUpdates = Object.fromEntries(
+        Object.entries(updates).filter(([_, v]) => v !== undefined)
+      );
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(cleanUpdates)
+        .eq('user_id', userId)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Profile update error:', error);
+        throw new Error(error.message || 'Failed to update profile');
+      }
+      
+      if (!data) {
+        throw new Error('No data returned after update');
+      }
+      
+      return data as Profile;
+    } catch (error: any) {
+      console.error('Update profile failed:', error);
+      throw error;
+    }
   },
 
   async createProfile(profile: Omit<Profile, 'id' | 'created_at'>) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .insert([profile])
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data as Profile;
+    try {
+      // Validate required fields
+      if (!profile.user_id || !profile.full_name) {
+        throw new Error('Missing required fields: user_id or full_name');
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert([{
+          ...profile,
+          updated_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Profile creation error:', error);
+        throw new Error(error.message || 'Failed to create profile');
+      }
+      
+      if (!data) {
+        throw new Error('No data returned after creation');
+      }
+      
+      return data as Profile;
+    } catch (error: any) {
+      console.error('Create profile failed:', error);
+      throw error;
+    }
   },
 
   async deleteProfile(userId: string) {
@@ -95,35 +134,86 @@ export const contactsService = {
   },
 
   async createContact(contact: Omit<EmergencyContact, 'id' | 'created_at'>) {
-    const { data, error } = await supabase
-      .from('emergency_contacts')
-      .insert([contact])
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data as EmergencyContact;
+    try {
+      // Validate required fields
+      if (!contact.name || !contact.phone_number || !contact.user_id) {
+        throw new Error('Missing required fields: name, phone_number, or user_id');
+      }
+
+      const { data, error } = await supabase
+        .from('emergency_contacts')
+        .insert([{
+          ...contact,
+          updated_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Contact creation error:', error);
+        throw new Error(error.message || 'Failed to create contact');
+      }
+      
+      if (!data) {
+        throw new Error('No data returned after creation');
+      }
+      
+      return data as EmergencyContact;
+    } catch (error: any) {
+      console.error('Create contact failed:', error);
+      throw error;
+    }
   },
 
   async updateContact(contactId: string, updates: Partial<EmergencyContact>) {
-    const { data, error } = await supabase
-      .from('emergency_contacts')
-      .update(updates)
-      .eq('id', contactId)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data as EmergencyContact;
+    try {
+      // Remove undefined values
+      const cleanUpdates = Object.fromEntries(
+        Object.entries(updates).filter(([_, v]) => v !== undefined)
+      );
+
+      const { data, error } = await supabase
+        .from('emergency_contacts')
+        .update(cleanUpdates)
+        .eq('id', contactId)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Contact update error:', error);
+        throw new Error(error.message || 'Failed to update contact');
+      }
+      
+      if (!data) {
+        throw new Error('No data returned after update');
+      }
+      
+      return data as EmergencyContact;
+    } catch (error: any) {
+      console.error('Update contact failed:', error);
+      throw error;
+    }
   },
 
   async deleteContact(contactId: string) {
-    const { error } = await supabase
-      .from('emergency_contacts')
-      .delete()
-      .eq('id', contactId);
-    
-    if (error) throw error;
+    try {
+      if (!contactId) {
+        throw new Error('Contact ID is required');
+      }
+
+      const { error } = await supabase
+        .from('emergency_contacts')
+        .delete()
+        .eq('id', contactId);
+      
+      if (error) {
+        console.error('Contact deletion error:', error);
+        throw new Error(error.message || 'Failed to delete contact');
+      }
+    } catch (error: any) {
+      console.error('Delete contact failed:', error);
+      throw error;
+    }
   },
 
   async setPrimaryContact(userId: string, contactId: string) {
