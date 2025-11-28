@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { StreetViewPanorama, LoadScript } from '@react-google-maps/api';
+import { useState, useEffect, useRef } from 'react';
+import { LoadScript } from '@react-google-maps/api';
 import { MapPin, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -25,15 +25,34 @@ export const StreetViewComponent: React.FC<StreetViewComponentProps> = ({
   height = '400px'
 }) => {
   const [streetViewAvailable, setStreetViewAvailable] = useState<boolean | null>(null);
+  const panoramaRef = useRef<google.maps.StreetViewPanorama | null>(null);
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
   useEffect(() => {
-    if (window.google) {
+    if (window.google && !panoramaRef.current) {
       const streetViewService = new google.maps.StreetViewService();
       streetViewService.getPanorama(
         { location, radius: 50 },
         (data, status) => {
-          setStreetViewAvailable(status === google.maps.StreetViewStatus.OK);
+          const isAvailable = status === google.maps.StreetViewStatus.OK;
+          setStreetViewAvailable(isAvailable);
+          
+          if (isAvailable) {
+            // Initialize Street View Panorama
+            const panoramaDiv = document.getElementById('street-view');
+            if (panoramaDiv) {
+              panoramaRef.current = new google.maps.StreetViewPanorama(
+                panoramaDiv,
+                {
+                  position: location,
+                  pov: { heading: 0, pitch: 0 },
+                  zoom: 1,
+                  addressControl: false,
+                  fullscreenControl: true,
+                }
+              );
+            }
+          }
         }
       );
     }
@@ -75,18 +94,9 @@ export const StreetViewComponent: React.FC<StreetViewComponentProps> = ({
   return (
     <div className="relative" style={{ height }}>
       <LoadScript googleMapsApiKey={apiKey}>
-        <StreetViewPanorama
-          position={location}
-          visible={true}
-          options={{
-            pov: { heading: 0, pitch: 0 },
-            zoom: 1,
-            addressControl: false,
-            fullscreenControl: true,
-            motionTracking: false,
-            motionTrackingControl: false,
-          }}
-        />
+        <div style={{ width: '100%', height: '100%' }}>
+          <div id="street-view" style={{ width: '100%', height: '100%' }} />
+        </div>
       </LoadScript>
       
       {onClose && (
