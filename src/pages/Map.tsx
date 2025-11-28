@@ -1,4 +1,4 @@
-import { MapPin, RefreshCw, Share2, Navigation, Loader2, Users, Send } from "lucide-react";
+import { MapPin, RefreshCw, Share2, Navigation, Loader2, Users, Send, Hospital, Shield, Car } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { BottomNav } from "@/components/BottomNav";
@@ -8,6 +8,7 @@ import useProfile from "@/hooks/use-profile";
 import { getCurrentLocation, getGoogleMapsLink } from "@/lib/emergency";
 import { supabase } from "@/lib/supabase";
 import GoogleMapComponent from "@/components/GoogleMap";
+import { reverseGeocode } from "@/lib/googleMapsServices";
 
 function Map() {
   const { toast } = useToast();
@@ -19,6 +20,7 @@ function Map() {
   const [address, setAddress] = useState<string>("Getting location...");
   const [liveTracking, setLiveTracking] = useState(false);
   const [contactsCount, setContactsCount] = useState(0);
+  const [showTraffic, setShowTraffic] = useState(false);
 
   // Get emergency contacts count
   useEffect(() => {
@@ -36,29 +38,34 @@ function Map() {
     fetchContacts();
   }, []);
 
-  // Reverse geocode location to address
-  const reverseGeocode = async (lat: number, lng: number) => {
+  // Reverse geocode location to address using Google Geocoding API
+  const reverseGeocodeLocation = async (lat: number, lng: number) => {
     try {
-      // Using OpenStreetMap Nominatim API for reverse geocoding (free)
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
-      );
-      const data = await response.json();
-      if (data && data.display_name) {
-        setAddress(data.display_name);
-      } else {
-        setAddress(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
-      }
+      const address = await reverseGeocode({ lat, lng });
+      setAddress(address);
     } catch (error) {
       console.error('Geocoding error:', error);
-      setAddress(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+      // Fallback to OpenStreetMap if Google fails
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+        );
+        const data = await response.json();
+        if (data && data.display_name) {
+          setAddress(data.display_name);
+        } else {
+          setAddress(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+        }
+      } catch (fallbackError) {
+        setAddress(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+      }
     }
   };
 
   // Handle location update from map
   const handleLocationUpdate = (newLocation: { lat: number; lng: number }) => {
     setLocation(newLocation);
-    reverseGeocode(newLocation.lat, newLocation.lng);
+    reverseGeocodeLocation(newLocation.lat, newLocation.lng);
   };
 
   const handleShareLocation = async () => {
@@ -162,10 +169,11 @@ function Map() {
       {/* Google Maps Component */}
       <div className="p-4">
         <GoogleMapComponent
-          height="calc(100vh - 350px)"
+          height="calc(100vh - 450px)"
           showCurrentLocation={true}
           onLocationUpdate={handleLocationUpdate}
           enableLiveTracking={liveTracking}
+          showTraffic={showTraffic}
           zoom={16}
         />
       </div>
@@ -191,31 +199,59 @@ function Map() {
           </div>
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-2 mb-3">
             <Button
               onClick={toggleLiveTracking}
               variant={liveTracking ? "default" : "outline"}
-              className="h-12 rounded-xl font-semibold"
+              className="h-11 rounded-xl font-semibold text-xs"
             >
               {liveTracking ? (
                 <>
-                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></span>
+                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-1.5"></span>
                   Tracking
                 </>
               ) : (
                 <>
-                  <Navigation className="w-4 h-4 mr-2" />
-                  Start Tracking
+                  <Navigation className="w-4 h-4 mr-1.5" />
+                  Track
                 </>
               )}
             </Button>
             <Button
+              onClick={() => setShowTraffic(!showTraffic)}
+              variant={showTraffic ? "default" : "outline"}
+              className="h-11 rounded-xl font-semibold text-xs"
+            >
+              <Car className="w-4 h-4 mr-1.5" />
+              {showTraffic ? 'Hide' : 'Show'} Traffic
+            </Button>
+            <Button
               onClick={openInMaps}
               variant="outline"
-              className="h-12 rounded-xl font-semibold"
+              className="h-11 rounded-xl font-semibold text-xs"
             >
-              <MapPin className="w-4 h-4 mr-2" />
-              Open in Maps
+              <MapPin className="w-4 h-4 mr-1.5" />
+              Maps
+            </Button>
+          </div>
+
+          {/* Quick Access Buttons */}
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <Button
+              onClick={() => navigate("/emergency-facilities")}
+              variant="outline"
+              className="h-11 rounded-xl font-semibold justify-start"
+            >
+              <Hospital className="w-4 h-4 mr-2" />
+              <span className="text-xs">Find Hospitals</span>
+            </Button>
+            <Button
+              onClick={() => navigate("/emergency-facilities")}
+              variant="outline"
+              className="h-11 rounded-xl font-semibold justify-start"
+            >
+              <Shield className="w-4 h-4 mr-2" />
+              <span className="text-xs">Find Police</span>
             </Button>
           </div>
 

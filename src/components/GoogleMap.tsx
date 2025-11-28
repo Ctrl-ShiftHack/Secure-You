@@ -1,6 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
-import { GoogleMap, LoadScript, Marker, Circle, InfoWindow } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, Marker, Circle, InfoWindow, TrafficLayer, DirectionsRenderer } from '@react-google-maps/api';
 import { MapPin, Navigation, Loader2 } from 'lucide-react';
+
+// Load additional Google Maps libraries
+const libraries: ("places" | "geometry" | "drawing")[] = ["places", "geometry"];
 
 interface Location {
   lat: number;
@@ -19,6 +22,8 @@ interface GoogleMapComponentProps {
   onLocationUpdate?: (location: Location) => void;
   enableLiveTracking?: boolean;
   zoom?: number;
+  showTraffic?: boolean;
+  destination?: Location;
 }
 
 const containerStyle = {
@@ -37,7 +42,9 @@ export const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({
   markers = [],
   onLocationUpdate,
   enableLiveTracking = false,
-  zoom = 15
+  zoom = 15,
+  showTraffic = false,
+  destination
 }) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
@@ -45,6 +52,7 @@ export const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [watchId, setWatchId] = useState<number | null>(null);
   const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
+  const [directionsResponse, setDirectionsResponse] = useState<google.maps.DirectionsResult | null>(null);
 
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -137,6 +145,31 @@ export const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({
     }
   }, [showCurrentLocation, getCurrentPosition]);
 
+  // Calculate directions when destination changes
+  useEffect(() => {
+    if (destination && currentLocation && window.google) {
+      const directionsService = new google.maps.DirectionsService();
+      
+      directionsService.route(
+        {
+          origin: currentLocation,
+          destination: destination,
+          travelMode: google.maps.TravelMode.DRIVING,
+        },
+        (result, status) => {
+          if (status === google.maps.DirectionsStatus.OK && result) {
+            setDirectionsResponse(result);
+          } else {
+            console.error('Directions request failed:', status);
+            setDirectionsResponse(null);
+          }
+        }
+      );
+    } else {
+      setDirectionsResponse(null);
+    }
+  }, [destination, currentLocation]);
+
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
   }, []);
@@ -178,7 +211,7 @@ export const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({
 
   return (
     <div className="relative" style={{ height }}>
-      <LoadScript googleMapsApiKey={apiKey}>
+      <LoadScript googleMapsApiKey={apiKey} libraries={libraries}>
         <GoogleMap
           mapContainerStyle={{ ...containerStyle, height }}
           center={currentLocation || defaultCenter}
@@ -187,11 +220,27 @@ export const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({
           onUnmount={onUnmount}
           options={{
             zoomControl: true,
-            streetViewControl: false,
-            mapTypeControl: false,
+            streetViewControl: true,
+            mapTypeControl: true,
             fullscreenControl: true,
           }}
         >
+          {/* Traffic Layer */}
+          {showTraffic && <TrafficLayer />}
+
+          {/* Directions Renderer */}
+          {directionsResponse && (
+            <DirectionsRenderer
+              directions={directionsResponse}
+              options={{
+                suppressMarkers: false,
+                polylineOptions: {
+                  strokeColor: '#3B82F6',
+                  strokeWeight: 5,
+                },
+              }}
+            />
+          )}
           {/* Current Location Marker */}
           {showCurrentLocation && currentLocation && (
             <>

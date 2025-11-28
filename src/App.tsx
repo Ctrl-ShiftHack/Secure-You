@@ -15,6 +15,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import Setup from "./pages/Setup";
 import Dashboard from "./pages/Dashboard";
 import Map from "./pages/Map";
+import EmergencyFacilities from "./pages/EmergencyFacilities";
 import Contacts from "./pages/Contacts";
 import ContactsNew from "./pages/ContactsNew";
 import ContactsEdit from "./pages/ContactsEdit";
@@ -93,6 +94,7 @@ const App = () => {
                 <Route path="/setup" element={<ProtectedRoute><Setup /></ProtectedRoute>} />
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/map" element={<ProtectedRoute><Map /></ProtectedRoute>} />
+                <Route path="/emergency-facilities" element={<ProtectedRoute><EmergencyFacilities /></ProtectedRoute>} />
                 <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
                 <Route path="/contacts/new" element={<ProtectedRoute><ContactsNew /></ProtectedRoute>} />
                 <Route path="/contacts/edit/:index" element={<ProtectedRoute><ContactsEdit /></ProtectedRoute>} />
