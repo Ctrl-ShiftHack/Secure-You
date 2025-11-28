@@ -374,9 +374,20 @@ const Settings = () => {
   };
 
   const handleSaveBloodType = async () => {
+    console.log('\n═══════════════════════════════════════');
+    console.log('🎯 Settings.handleSaveBloodType: Started');
+    console.log('═══════════════════════════════════════');
+    
     try {
       setSaving(true);
+      console.log('Step 1: Set saving state to true');
+      console.log('Step 2: Calling updateProfile...');
+      console.log('  - Blood type:', bloodTypeValue || 'null');
+      
       await updateProfile({ blood_type: bloodTypeValue as any || null });
+      
+      console.log('✅ handleSaveBloodType: Update successful!');
+      console.log('═══════════════════════════════════════\n');
       
       toast({
         title: "Updated",
@@ -384,13 +395,28 @@ const Settings = () => {
       });
       closeDialog();
     } catch (error: any) {
+      console.error('❌ handleSaveBloodType: Error caught');
+      console.error('  - Error:', error);
+      console.error('  - Message:', error?.message);
+      console.error('═══════════════════════════════════════\n');
+      
+      let errorMessage = error?.message || "Failed to update blood type";
+      
+      if (errorMessage.includes('timeout')) {
+        errorMessage += '\n\n💡 Check your internet connection and Supabase status.';
+      } else if (errorMessage.includes('row-level security') || errorMessage.includes('Permission denied')) {
+        errorMessage = '🔒 Permission denied. Run COMPLETE_DATABASE_RESET.sql in Supabase.';
+      }
+      
       toast({
         title: "Error",
-        description: error?.message || "Failed to update blood type",
-        variant: "destructive"
+        description: errorMessage,
+        variant: "destructive",
+        duration: 8000
       });
     } finally {
       setSaving(false);
+      console.log('Step 3: Reset saving state to false');
     }
   };
 
