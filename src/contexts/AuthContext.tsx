@@ -277,10 +277,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
-    if (!user) throw new Error('No user logged in');
+    if (!user) {
+      console.error('updateProfile: No user logged in');
+      throw new Error('No user logged in');
+    }
     
-    const updatedProfile = await profileService.updateProfile(user.id, updates);
-    setProfile(updatedProfile);
+    console.log('updateProfile: Starting update', { userId: user.id, updates });
+    
+    try {
+      // Set a timeout for the update operation
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Update timeout - operation took too long')), 15000);
+      });
+      
+      const updatePromise = profileService.updateProfile(user.id, updates);
+      
+      const updatedProfile = await Promise.race([updatePromise, timeoutPromise]) as Profile;
+      
+      console.log('updateProfile: Update successful', updatedProfile);
+      setProfile(updatedProfile);
+    } catch (error: any) {
+      console.error('updateProfile: Update failed', error);
+      throw new Error(error?.message || 'Failed to update profile');
+    }
   };
 
   const reauthenticate = async (password: string) => {

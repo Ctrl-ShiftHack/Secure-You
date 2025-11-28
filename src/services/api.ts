@@ -38,12 +38,27 @@ export const profileService = {
   },
 
   async updateProfile(userId: string, updates: Partial<Profile>) {
+    console.log('profileService.updateProfile: Called', { userId, updates });
+    
     try {
+      // Validate userId
+      if (!userId || userId.trim() === '') {
+        throw new Error('Invalid user ID');
+      }
+
       // Remove any undefined or null values from updates
       const cleanUpdates = Object.fromEntries(
-        Object.entries(updates).filter(([_, v]) => v !== undefined)
+        Object.entries(updates).filter(([_, v]) => v !== undefined && v !== null)
       );
+      
+      console.log('profileService.updateProfile: Clean updates', cleanUpdates);
 
+      if (Object.keys(cleanUpdates).length === 0) {
+        throw new Error('No valid fields to update');
+      }
+
+      console.log('profileService.updateProfile: Calling Supabase...');
+      
       const { data, error } = await supabase
         .from('profiles')
         .update(cleanUpdates)
@@ -51,15 +66,30 @@ export const profileService = {
         .select()
         .single();
       
+      console.log('profileService.updateProfile: Supabase response', { data, error });
+      
       if (error) {
         console.error('Profile update error:', error);
+        
+        // Provide specific error messages
+        if (error.code === 'PGRST116') {
+          throw new Error('Profile not found. Please try logging out and back in.');
+        }
+        if (error.message.includes('violates row-level security')) {
+          throw new Error('Permission denied. Please run the database fix script.');
+        }
+        if (error.message.includes('timeout')) {
+          throw new Error('Database timeout. Please check your connection.');
+        }
+        
         throw new Error(error.message || 'Failed to update profile');
       }
       
       if (!data) {
-        throw new Error('No data returned after update');
+        throw new Error('No data returned after update. Please try again.');
       }
       
+      console.log('profileService.updateProfile: Success!');
       return data as Profile;
     } catch (error: any) {
       console.error('Update profile failed:', error);

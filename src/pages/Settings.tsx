@@ -242,19 +242,42 @@ const Settings = () => {
       }
 
       setSaving(true);
-      // Optimized: Direct update without reload
-      await updateProfile({ full_name: sanitizeText(nameValue) });
+      console.log('handleSaveName: Starting update', { nameValue });
+      
+      try {
+        // Optimized: Direct update without reload
+        await updateProfile({ full_name: sanitizeText(nameValue) });
+        
+        console.log('handleSaveName: Update successful');
+        
+        toast({
+          title: "Updated",
+          description: "Name updated successfully"
+        });
+        closeDialog();
+      } catch (updateError: any) {
+        console.error('handleSaveName: Update failed', updateError);
+        throw updateError;
+      }
+    } catch (error: any) {
+      console.error('handleSaveName: Error caught', error);
+      
+      let errorMessage = error?.message || "Failed to update name";
+      
+      // Add helpful hints for common errors
+      if (errorMessage.includes('timeout')) {
+        errorMessage += '. The database is taking too long to respond. Please check your internet connection.';
+      } else if (errorMessage.includes('row-level security')) {
+        errorMessage = 'Permission denied. Please run the database fix script from QUICK_DATABASE_FIX.md';
+      } else if (errorMessage.includes('not found')) {
+        errorMessage += '. Please try logging out and back in.';
+      }
       
       toast({
-        title: "Updated",
-        description: "Name updated successfully"
-      });
-      closeDialog();
-    } catch (error: any) {
-      toast({
         title: "Error",
-        description: error?.message || "Failed to update name",
-        variant: "destructive"
+        description: errorMessage,
+        variant: "destructive",
+        duration: 8000
       });
     } finally {
       setSaving(false);
