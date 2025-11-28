@@ -15,6 +15,10 @@ import { useAuth } from '../../contexts/AuthContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import API from '../../config/api';
+import * as Haptics from 'expo-haptics';
+import Toast from 'react-native-toast-message';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function RegisterScreen() {
   const [fullName, setFullName] = useState('');
@@ -26,41 +30,83 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
 
-  const handleRegister = async () => {
+  const formData = { fullName, email, password };
+
+  const validateForm = () => {
     if (!fullName || !email || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields');
-      return;
+      return false;
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Alert.alert('Error', 'Please enter a valid email address');
-      return;
+      return false;
     }
 
     if (password !== confirmPassword) {
       Alert.alert('Error', 'Passwords do not match');
-      return;
+      return false;
     }
 
     if (password.length < 6) {
       Alert.alert('Error', 'Password must be at least 6 characters');
-      return;
+      return false;
     }
 
-    setLoading(true);
-    const { error } = await signUp(email, password, fullName);
-    setLoading(false);
+    return true;
+  };
 
-    if (error) {
-      Alert.alert('Registration Failed', error.message);
-    } else {
-      Alert.alert(
-        'Success', 
-        'Account created! Please check your email to verify your account.',
-        [{ text: 'OK', onPress: () => router.replace('/(auth)/login') }]
-      );
+  const handleRegister = async () => {
+    if (!validateForm()) return;
+
+    setLoading(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    try {
+      const response = await fetch('https://secure-you.vercel.app/api/users/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Save auth data
+        await AsyncStorage.setItem('token', data.token);
+        // Mark user as needing profile completion
+        await AsyncStorage.setItem('user', JSON.stringify({ ...data.user, profileCompleted: false }));
+
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Toast.show({
+          type: 'success',
+          text1: 'Registration successful!',
+          text2: 'Please complete your profile',
+        });
+
+        setTimeout(() => {
+          // New user always goes to complete profile
+          router.replace('/(app)/complete-profile');
+        }, 500);
+      } else {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        Toast.show({
+          type: 'error',
+          text1: 'Registration failed',
+          text2: data.message || 'Please try again',
+        });
+      }
+    } catch (error) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Toast.show({
+        type: 'error',
+        text1: 'Connection error',
+        text2: 'Please check your internet connection',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 

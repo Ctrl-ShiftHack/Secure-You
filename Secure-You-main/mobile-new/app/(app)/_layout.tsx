@@ -1,8 +1,42 @@
 import { Slot } from 'expo-router';
 import { Tabs } from 'expo-router/tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Stack, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, ActivityIndicator } from 'react-native';
 
 export default function AppLayout() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        // Not logged in, redirect to login
+        router.replace('/(auth)/login');
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+      router.replace('/(auth)/login');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#ffffff' }}>
+        <ActivityIndicator size="large" color="#667eea" />
+      </View>
+    );
+  }
+
   return (
     <Tabs
       screenOptions={{

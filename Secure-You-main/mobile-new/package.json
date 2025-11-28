@@ -4,10 +4,13 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "build:android": "eas build --platform android --profile preview",
+    "build:android:production": "eas build --platform android --profile production",
+    "build:ios": "eas build --platform ios --profile preview",
+    "prebuild": "expo prebuild",
     "lint": "expo lint"
   },
   "dependencies": {
