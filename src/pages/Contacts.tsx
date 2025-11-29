@@ -247,11 +247,6 @@ const Contacts = () => {
                   onCall={() => handleCall(contact.phone_number)}
                   onNavigate={contact.address ? () => handleNavigate(contact) : undefined}
                 />
-                  isPrimary={contact.is_primary}
-                  onEdit={() => handleEdit(contact.id)}
-                  onDelete={() => handleDeleteClick(contact.id, contact.name)}
-                  onCall={() => handleCall(contact.phone_number)}
-                />
               ))}
             </div>
           ) : (
