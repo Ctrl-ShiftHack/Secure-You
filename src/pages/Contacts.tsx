@@ -59,36 +59,38 @@ const Contacts = () => {
       const data = await contactsService.getContacts(user.id);
       setContacts(data);
       
-      // Calculate distances for contacts with addresses
-      if (window.google) {
-        try {
-          const userLocation = await getCurrentLocation();
-          const distances: Record<string, string> = {};
-          
-          for (const contact of data) {
-            if (contact.address) {
-              try {
-                const contactLocation = await geocodeAddress(contact.address);
-                if (contactLocation) {
-                  const distance = calculateDistance(
-                    userLocation.lat,
-                    userLocation.lng,
-                    contactLocation.lat,
-                    contactLocation.lng
-                  );
-                  distances[contact.id] = formatDistance(distance);
+      // Calculate distances for contacts with addresses (wait for Google Maps to load)
+      setTimeout(async () => {
+        if (window.google) {
+          try {
+            const userLocation = await getCurrentLocation();
+            const distances: Record<string, string> = {};
+            
+            for (const contact of data) {
+              if (contact.address) {
+                try {
+                  const contactLocation = await geocodeAddress(contact.address);
+                  if (contactLocation) {
+                    const distance = calculateDistance(
+                      userLocation.lat,
+                      userLocation.lng,
+                      contactLocation.lat,
+                      contactLocation.lng
+                    );
+                    distances[contact.id] = formatDistance(distance);
+                  }
+                } catch (err) {
+                  console.log(`Could not geocode ${contact.name}:`, err);
                 }
-              } catch (err) {
-                console.log(`Could not geocode ${contact.name}:`, err);
               }
             }
+            
+            setContactDistances(distances);
+          } catch (err) {
+            console.log('Could not calculate distances:', err);
           }
-          
-          setContactDistances(distances);
-        } catch (err) {
-          console.log('Could not calculate distances:', err);
         }
-      }
+      }, 2000); // Wait 2 seconds for Google Maps to load
     } catch (error: any) {
       console.error('Error loading contacts:', error);
       toast({
@@ -147,6 +149,15 @@ const Contacts = () => {
       toast({
         title: "No Address",
         description: "This contact doesn't have an address set",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!window.google) {
+      toast({
+        title: "Maps Loading",
+        description: "Google Maps is still loading, please try again in a moment",
         variant: "destructive"
       });
       return;

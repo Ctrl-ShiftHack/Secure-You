@@ -37,29 +37,31 @@ function Map() {
         
         setContactsCount(contacts?.length || 0);
         
-        // Geocode contact addresses to show on map
-        if (contacts && contacts.length > 0 && window.google) {
-          const markers: Array<{ id: string; position: { lat: number; lng: number }; label: string }> = [];
-          
-          for (const contact of contacts) {
-            if (contact.address) {
-              try {
-                const location = await geocodeAddress(contact.address);
-                if (location) {
-                  markers.push({
-                    id: contact.id,
-                    position: location,
-                    label: `${contact.name} (${contact.relationship})`
-                  });
+        // Wait a bit for Google Maps to load, then geocode contact addresses
+        setTimeout(async () => {
+          if (contacts && contacts.length > 0 && window.google) {
+            const markers: Array<{ id: string; position: { lat: number; lng: number }; label: string }> = [];
+            
+            for (const contact of contacts) {
+              if (contact.address) {
+                try {
+                  const location = await geocodeAddress(contact.address);
+                  if (location) {
+                    markers.push({
+                      id: contact.id,
+                      position: location,
+                      label: `${contact.name} (${contact.relationship})`
+                    });
+                  }
+                } catch (err) {
+                  console.log(`Could not geocode ${contact.name}:`, err);
                 }
-              } catch (err) {
-                console.log(`Could not geocode ${contact.name}:`, err);
               }
             }
+            
+            setContactMarkers(markers);
           }
-          
-          setContactMarkers(markers);
-        }
+        }, 2000); // Wait 2 seconds for Google Maps to load
       }
     };
     fetchContacts();
@@ -68,6 +70,12 @@ function Map() {
   // Reverse geocode location to address using Google Geocoding API
   const reverseGeocodeLocation = async (lat: number, lng: number) => {
     try {
+      // Wait for Google Maps to be available
+      if (!window.google) {
+        console.log('Google Maps not loaded yet, using fallback');
+        throw new Error('Google Maps not loaded');
+      }
+      
       const address = await reverseGeocode({ lat, lng });
       setAddress(address);
     } catch (error) {

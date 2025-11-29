@@ -47,14 +47,40 @@ const Dashboard = () => {
     const loadNearestHospital = async () => {
       try {
         const location = await getCurrentLocation();
-        if (location && window.google) {
-          const facilities = await findEmergencyFacilities(location, 5000);
-          if (facilities.hospitals.length > 0) {
-            const hospital = facilities.hospitals[0];
-            setNearestHospital({
-              name: hospital.name,
-              distance: hospital.distance ? formatDistance(hospital.distance) : 'N/A'
+        if (location) {
+          // Wait for Google Maps to load
+          const checkGoogleMaps = () => {
+            return new Promise<void>((resolve) => {
+              if (window.google) {
+                resolve();
+              } else {
+                const interval = setInterval(() => {
+                  if (window.google) {
+                    clearInterval(interval);
+                    resolve();
+                  }
+                }, 500);
+                
+                // Timeout after 5 seconds
+                setTimeout(() => {
+                  clearInterval(interval);
+                  resolve();
+                }, 5000);
+              }
             });
+          };
+          
+          await checkGoogleMaps();
+          
+          if (window.google) {
+            const facilities = await findEmergencyFacilities(location, 5000);
+            if (facilities.hospitals.length > 0) {
+              const hospital = facilities.hospitals[0];
+              setNearestHospital({
+                name: hospital.name,
+                distance: hospital.distance ? formatDistance(hospital.distance) : 'N/A'
+              });
+            }
           }
         }
       } catch (error) {
