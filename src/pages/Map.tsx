@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import useProfile from "@/hooks/use-profile";
 import { getCurrentLocation, getGoogleMapsLink } from "@/lib/emergency";
 import { supabase } from "@/lib/supabase";
-import { GoogleMapComponent } from "@/components/GoogleMapNew";
+import { SimpleMap } from "@/components/SimpleMap";
 import { reverseGeocode, geocodeAddress } from "@/lib/googleMapsServices";
 import type { EmergencyContact } from "@/types/database.types";
 
@@ -201,16 +201,14 @@ function Map() {
         </div>
       </header>
 
-      {/* Google Maps Component */}
+      {/* Map Component with Fallback */}
       <div className="p-4">
-        <GoogleMapComponent
+        <SimpleMap
           height="calc(100vh - 450px)"
           showCurrentLocation={true}
           onLocationUpdate={handleLocationUpdate}
           enableLiveTracking={liveTracking}
-          showTraffic={showTraffic}
           markers={showContacts ? contactMarkers : []}
-          zoom={showContacts && contactMarkers.length > 0 ? 13 : 16}
         />
       </div>
 

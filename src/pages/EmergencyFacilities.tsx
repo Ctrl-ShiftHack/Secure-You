@@ -3,7 +3,7 @@ import { MapPin, Phone, Navigation, Hospital, Shield, Flame, Loader2, AlertTrian
 import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { GoogleMapComponent } from "@/components/GoogleMapNew";
+import { SimpleMap } from "@/components/SimpleMap";
 import {
   findEmergencyFacilities,
   Place,
@@ -165,12 +165,10 @@ function EmergencyFacilities() {
           {/* Map */}
           {location && (
             <div className="p-4">
-              <GoogleMapComponent
+              <SimpleMap
                 height="300px"
                 showCurrentLocation={true}
                 markers={getMarkers()}
-                zoom={13}
-                destination={mapDestination || undefined}
               />
             </div>
           )}
