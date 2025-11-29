@@ -1,6 +1,6 @@
 // Service Worker for SecureYou PWA
-const CACHE_NAME = 'secureyou-v1.0.0';
-const RUNTIME_CACHE = 'secureyou-runtime';
+const CACHE_NAME = 'secureyou-v1.0.1';
+const RUNTIME_CACHE = 'secureyou-runtime-v1.0.1';
 
 // Assets to cache on install
 const PRECACHE_URLS = [

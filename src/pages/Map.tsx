@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import useProfile from "@/hooks/use-profile";
 import { getCurrentLocation, getGoogleMapsLink } from "@/lib/emergency";
 import { supabase } from "@/lib/supabase";
-import GoogleMapComponent from "@/components/GoogleMap";
+import { GoogleMapComponent } from "@/components/GoogleMapNew";
 import { reverseGeocode, geocodeAddress } from "@/lib/googleMapsServices";
 import type { EmergencyContact } from "@/types/database.types";
 

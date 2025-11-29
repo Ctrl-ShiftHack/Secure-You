@@ -3,7 +3,7 @@ import { MapPin, Phone, Navigation, Hospital, Shield, Flame, Loader2, AlertTrian
 import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import GoogleMapComponent from "@/components/GoogleMap";
+import { GoogleMapComponent } from "@/components/GoogleMapNew";
 import {
   findEmergencyFacilities,
   Place,
