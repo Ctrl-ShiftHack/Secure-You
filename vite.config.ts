@@ -32,11 +32,13 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     // Improve build performance
+    chunkSizeWarningLimit: 1000, // Increase chunk size warning limit to 1000 KB
     rollupOptions: {
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-vendor': ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+          'google-maps': ['@react-google-maps/api'],
         },
       },
     },
