@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SecureYou</string>
+    <string name="title_activity_main">SecureYou</string>
+    <string name="package_name">com.secureyou.app</string>
+    <string name="custom_url_scheme">com.secureyou.app</string>
+</resources>

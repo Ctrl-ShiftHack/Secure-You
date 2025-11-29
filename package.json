@@ -12,7 +12,12 @@
     "test:supabase": "node test-supabase.js",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy": "npm run build && vercel --prod"
+    "deploy": "npm run build && vercel --prod",
+    "android:sync": "npm run build && npx cap sync android",
+    "android:open": "npx cap open android",
+    "android:build": "cd android && .\\gradlew assembleDebug",
+    "android:build:release": "cd android && .\\gradlew assembleRelease",
+    "apk": "npm run build && npx cap sync android && cd android && .\\gradlew assembleDebug"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -71,6 +76,9 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@capacitor/android": "^7.4.4",
+    "@capacitor/cli": "^7.4.4",
+    "@capacitor/core": "^7.4.4",
     "@eslint/js": "^9.32.0",
     "@playwright/test": "^1.44.0",
     "@tailwindcss/typography": "^0.5.16",
