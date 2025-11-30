@@ -131,16 +131,28 @@ CREATE TRIGGER update_post_comments_updated_at
 -- HELPER FUNCTIONS
 -- ============================================
 
+-- Drop existing view if it exists
+DROP VIEW IF EXISTS posts_with_counts CASCADE;
+
 -- Function to get post with like/comment counts
-CREATE OR REPLACE VIEW posts_with_counts AS
+CREATE VIEW posts_with_counts AS
 SELECT 
-    ip.*,
-    p.full_name as author_name,
-    p.avatar_url as author_avatar,
-    COALESCE(reaction_counts.like_count, 0) as like_count,
+    ip.id,
+    ip.created_at,
+    ip.updated_at,
+    ip.user_id,
+    ip.content,
+    ip.image_url,
+    ip.location,
+    ip.visibility,
+    ip.is_deleted,
+    p.full_name as user_name,
+    p.avatar_url as user_avatar,
+    COALESCE(reaction_counts.like_count, 0) as reaction_count,
     COALESCE(reaction_counts.love_count, 0) as love_count,
     COALESCE(reaction_counts.support_count, 0) as support_count,
-    COALESCE(comment_counts.comment_count, 0) as comment_count
+    COALESCE(comment_counts.comment_count, 0) as comment_count,
+    CASE WHEN user_reactions.user_id IS NOT NULL THEN true ELSE false END as user_has_reacted
 FROM incident_posts ip
 LEFT JOIN profiles p ON ip.user_id = p.user_id
 LEFT JOIN (
@@ -155,8 +167,15 @@ LEFT JOIN (
 LEFT JOIN (
     SELECT post_id, COUNT(*) as comment_count
     FROM post_comments
+    WHERE is_deleted = false
     GROUP BY post_id
 ) comment_counts ON ip.id = comment_counts.post_id
+LEFT JOIN (
+    SELECT DISTINCT post_id, user_id
+    FROM post_reactions
+    WHERE user_id = auth.uid()
+) user_reactions ON ip.id = user_reactions.post_id
+WHERE ip.is_deleted = false
 ORDER BY ip.created_at DESC;
 
 -- ============================================
