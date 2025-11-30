@@ -21,7 +21,20 @@ export const SOSButton = ({ onPress, isActive = false }: SOSButtonProps) => {
   const [isPressing, setIsPressing] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
+  // Trigger haptic feedback
+  const triggerHaptic = (type: 'light' | 'medium' | 'heavy' = 'medium') => {
+    if ('vibrate' in navigator) {
+      const patterns = {
+        light: [10],
+        medium: [20],
+        heavy: [30, 10, 30]
+      };
+      navigator.vibrate(patterns[type]);
+    }
+  };
+
   const handlePress = () => {
+    triggerHaptic('medium');
     if (!isActive) {
       setShowConfirmation(true);
     } else {
@@ -30,6 +43,7 @@ export const SOSButton = ({ onPress, isActive = false }: SOSButtonProps) => {
   };
 
   const handleConfirm = () => {
+    triggerHaptic('heavy');
     setShowConfirmation(false);
     onPress();
   };
