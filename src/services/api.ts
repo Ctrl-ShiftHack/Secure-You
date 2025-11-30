@@ -382,13 +382,13 @@ export const incidentsService = {
 
 // Social Feed - Posts Service
 export const postsService = {
-  async getPosts(limit = 50) {
+  async getPosts(limit = 50, offset = 0) {
     try {
       const { data, error } = await supabase
         .from('posts_with_counts')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(limit);
+        .range(offset, offset + limit - 1);
       
       if (error) {
         console.error('Supabase error:', error);
@@ -519,6 +519,16 @@ export const reactionsService = {
     
     if (error) throw error;
     return data as PostReaction | null;
+  },
+
+  async getUserReactions(userId: string) {
+    const { data, error } = await supabase
+      .from('post_reactions')
+      .select('*')
+      .eq('user_id', userId);
+    
+    if (error) throw error;
+    return data as PostReaction[];
   },
 
   async addReaction(reaction: ReactionInsert) {

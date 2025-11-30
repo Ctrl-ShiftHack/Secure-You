@@ -20,6 +20,7 @@ import Contacts from "./pages/Contacts";
 import ContactsNew from "./pages/ContactsNew";
 import ContactsEdit from "./pages/ContactsEdit";
 import Incidents from "./pages/Incidents";
+import IncidentsSocial from "./pages/IncidentsSocial";
 import IncidentDetail from "./pages/IncidentDetail";
 import Settings from "./pages/Settings";
 import Silent from "./pages/Silent";
@@ -98,7 +99,8 @@ const App = () => {
                 <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
                 <Route path="/contacts/new" element={<ProtectedRoute><ContactsNew /></ProtectedRoute>} />
                 <Route path="/contacts/edit/:index" element={<ProtectedRoute><ContactsEdit /></ProtectedRoute>} />
-                <Route path="/incidents" element={<ProtectedRoute><Incidents /></ProtectedRoute>} />
+                <Route path="/incidents" element={<ProtectedRoute><IncidentsSocial /></ProtectedRoute>} />
+                <Route path="/incidents/old" element={<ProtectedRoute><Incidents /></ProtectedRoute>} />
                 <Route path="/incidents/:id" element={<ProtectedRoute><IncidentDetail /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="/silent" element={<ProtectedRoute><Silent /></ProtectedRoute>} />
