@@ -42,22 +42,16 @@ export function calculateDistance(
 }
 
 /**
- * Search for nearby places using Places API (Text Search)
+ * Search for nearby places - DEPRECATED
+ * Use pre-loaded facility data instead (emergencyFacilities.ts)
  */
 export async function searchNearbyPlaces(
   location: Location,
   type: string,
   radius: number = 5000
 ): Promise<Place[]> {
-  if (!window.google) {
-    throw new Error('Google Maps not loaded');
-  }
-
-  return new Promise((resolve, reject) => {
-    // Use the legacy API but with proper error handling
-    const service = new google.maps.places.PlacesService(
-      document.createElement('div')
-    );
+  console.warn('searchNearbyPlaces is deprecated - use emergencyFacilities.ts data instead');
+  return Promise.resolve([]);
 
     const request = {
       location: new google.maps.LatLng(location.lat, location.lng),
