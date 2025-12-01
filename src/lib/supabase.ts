@@ -31,4 +31,15 @@ export const supabase = createClient<Database>(cleanUrl, anonKey, {
       ? `${window.location.origin}/setup` 
       : undefined,
   },
+  global: {
+    headers: {
+      'X-Client-Info': 'secureyou-web',
+    },
+  },
+  db: {
+    schema: 'public',
+  },
+  realtime: {
+    timeout: 30000,
+  },
 });

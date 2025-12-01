@@ -287,20 +287,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
     
     try {
-      console.log('✓ User validated, creating timeout promise...');
+      console.log('✓ User validated, updating profile...');
       
-      // Set a timeout for the update operation
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => {
-          console.error('❌ Timeout reached (20 seconds)');
-          reject(new Error('Update timeout - operation took more than 20 seconds. Check your internet connection and Supabase configuration.'));
-        }, 20000); // 20 second timeout
-      });
-      
-      console.log('✓ Calling profileService.updateProfile...');
-      const updatePromise = profileService.updateProfile(user.id, updates);
-      
-      const updatedProfile = await Promise.race([updatePromise, timeoutPromise]);
+      // Direct update without timeout race - let Supabase handle its own timeout
+      const updatedProfile = await profileService.updateProfile(user.id, updates);
       
       console.log('✅ AuthContext.updateProfile: Success!');
       console.log('  - Updated profile:', updatedProfile);
@@ -310,6 +300,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.error('❌ AuthContext.updateProfile: Failed');
       console.error('  - Error:', error);
       console.error('  - Message:', error?.message);
+      
+      // Provide user-friendly error messages
+      if (error?.message?.includes('timeout')) {
+        throw new Error('Connection timeout. Please check your internet connection and try again.');
+      }
+      if (error?.message?.includes('RLS') || error?.message?.includes('row-level security')) {
+        throw new Error('Database permission error. Please contact support.');
+      }
+      if (error?.message?.includes('JWT') || error?.message?.includes('expired')) {
+        throw new Error('Session expired. Please log out and back in.');
+      }
+      
       throw new Error(error?.message || 'Failed to update profile');
     }
   };

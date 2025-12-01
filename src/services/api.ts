@@ -48,9 +48,9 @@ export const profileService = {
       }
       console.log('✓ Step 1: User ID validated');
 
-      // Step 2: Clean updates
+      // Step 2: Clean updates - keep null values for clearing fields
       const cleanUpdates = Object.fromEntries(
-        Object.entries(updates).filter(([_, v]) => v !== undefined && v !== null)
+        Object.entries(updates).filter(([_, v]) => v !== undefined)
       );
       
       console.log('✓ Step 2: Clean updates', cleanUpdates);
@@ -61,7 +61,7 @@ export const profileService = {
       }
       console.log('✓ Step 3: Fields validated');
 
-      // Step 3: Check Supabase connection
+      // Step 4: Update profile with timeout protection
       console.log('✓ Step 4: Calling Supabase update...');
       console.log('  - Table: profiles');
       console.log('  - Filter: user_id =', userId);
@@ -69,49 +69,64 @@ export const profileService = {
       
       const startTime = Date.now();
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(cleanUpdates)
-        .eq('user_id', userId)
-        .select()
-        .single();
+      // Use abortController for timeout
+      const abortController = new AbortController();
+      const timeoutId = setTimeout(() => abortController.abort(), 15000); // 15 second timeout
       
-      const duration = Date.now() - startTime;
-      console.log(`✓ Step 5: Supabase responded in ${duration}ms`);
-      console.log('  - Data:', data);
-      console.log('  - Error:', error);
-      
-      if (error) {
-        console.error('❌ Profile update error:', error);
-        console.error('  - Code:', error.code);
-        console.error('  - Message:', error.message);
-        console.error('  - Details:', error.details);
-        console.error('  - Hint:', error.hint);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .update(cleanUpdates)
+          .eq('user_id', userId)
+          .select()
+          .single()
+          .abortSignal(abortController.signal);
         
-        // Provide specific error messages
-        if (error.code === 'PGRST116') {
-          throw new Error('Profile not found. Please try logging out and back in.');
-        }
-        if (error.message.includes('violates row-level security') || error.code === '42501') {
-          throw new Error('Permission denied. RLS policy blocking update. Run COMPLETE_DATABASE_RESET.sql in Supabase.');
-        }
-        if (error.message.includes('timeout') || error.code === 'PGRST301') {
-          throw new Error('Database timeout. Please check your connection.');
-        }
-        if (error.message.includes('JWT')) {
-          throw new Error('Session expired. Please log out and back in.');
+        clearTimeout(timeoutId);
+        
+        const duration = Date.now() - startTime;
+        console.log(`✓ Step 5: Supabase responded in ${duration}ms`);
+        console.log('  - Data:', data);
+        console.log('  - Error:', error);
+        
+        if (error) {
+          console.error('❌ Profile update error:', error);
+          console.error('  - Code:', error.code);
+          console.error('  - Message:', error.message);
+          console.error('  - Details:', error.details);
+          console.error('  - Hint:', error.hint);
+          
+          // Provide specific error messages
+          if (error.code === 'PGRST116') {
+            throw new Error('Profile not found. Please try logging out and back in.');
+          }
+          if (error.message.includes('violates row-level security') || error.code === '42501') {
+            throw new Error('Permission denied. Your profile cannot be updated.');
+          }
+          if (error.message.includes('timeout') || error.code === 'PGRST301') {
+            throw new Error('Connection timeout. Please check your internet.');
+          }
+          if (error.message.includes('JWT')) {
+            throw new Error('Session expired. Please log out and back in.');
+          }
+          
+          throw new Error(error.message || 'Failed to update profile');
         }
         
-        throw new Error(error.message || 'Failed to update profile');
+        if (!data) {
+          console.error('❌ No data returned after update');
+          throw new Error('No data returned. Please try again.');
+        }
+        
+        console.log('✅ profileService.updateProfile: Success!');
+        return data as Profile;
+      } catch (abortError: any) {
+        clearTimeout(timeoutId);
+        if (abortError.name === 'AbortError') {
+          throw new Error('Request timeout - please check your internet connection');
+        }
+        throw abortError;
       }
-      
-      if (!data) {
-        console.error('❌ No data returned after update');
-        throw new Error('No data returned after update. Please try again.');
-      }
-      
-      console.log('✅ profileService.updateProfile: Success!');
-      return data as Profile;
     } catch (error: any) {
       console.error('❌ Update profile failed:', error);
       console.error('  - Name:', error.name);
