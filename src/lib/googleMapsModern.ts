@@ -1,6 +1,6 @@
 /**
- * Modern Google Maps Services - Using latest APIs
- * Migrated from deprecated Places API to new Place class
+ * Modern Google Maps Services - Core functionality only
+ * No Places API - use emergencyFacilities.ts for facility data
  */
 
 export interface Location {
@@ -43,7 +43,7 @@ export function calculateDistance(
 
 /**
  * Search for nearby places - DEPRECATED
- * Use pre-loaded facility data instead (emergencyFacilities.ts)
+ * Use pre-loaded facility data from emergencyFacilities.ts instead
  */
 export async function searchNearbyPlaces(
   location: Location,
@@ -52,52 +52,6 @@ export async function searchNearbyPlaces(
 ): Promise<Place[]> {
   console.warn('searchNearbyPlaces is deprecated - use emergencyFacilities.ts data instead');
   return Promise.resolve([]);
-
-    const request = {
-      location: new google.maps.LatLng(location.lat, location.lng),
-      radius,
-      type: type,
-    };
-
-    service.nearbySearch(request, (results, status) => {
-      // Handle the deprecated API warning gracefully
-      if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-        const places: Place[] = results
-          .filter((place) => place.geometry?.location && place.place_id)
-          .map((place) => {
-            const placeLat = place.geometry!.location!.lat();
-            const placeLng = place.geometry!.location!.lng();
-            const distance = calculateDistance(
-              location.lat,
-              location.lng,
-              placeLat,
-              placeLng
-            );
-
-            return {
-              id: place.place_id!,
-              name: place.name || 'Unknown',
-              address: place.vicinity || '',
-              location: {
-                lat: placeLat,
-                lng: placeLng,
-              },
-              distance,
-              rating: place.rating,
-              placeId: place.place_id,
-              types: place.types,
-            };
-          })
-          .sort((a, b) => (a.distance || 0) - (b.distance || 0));
-
-        resolve(places);
-      } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
-        reject(new Error('API key not authorized for Places API. Please enable Places API in Google Cloud Console.'));
-      } else {
-        reject(new Error(`Places search failed: ${status}`));
-      }
-    });
-  });
 }
 
 /**
@@ -117,7 +71,21 @@ export async function reverseGeocode(location: Location): Promise<string> {
         if (status === 'OK' && results && results[0]) {
           resolve(results[0].formatted_address);
         } else {
-          reject(new Error(`Geocoding failed: ${status}`));
+          // Fallback to OpenStreetMap if geocoding fails
+          fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${location.lat}&lon=${location.lng}`
+          )
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.display_name) {
+                resolve(data.display_name);
+              } else {
+                reject(new Error('Geocoding failed'));
+              }
+            })
+            .catch(() => {
+              reject(new Error(`Geocoding failed: ${status}`));
+            });
         }
       }
     );
@@ -125,14 +93,14 @@ export async function reverseGeocode(location: Location): Promise<string> {
 }
 
 /**
- * Forward geocode (address to coordinates)
+ * Forward geocode an address
  */
-export async function geocodeAddress(address: string): Promise<Location | null> {
+export async function geocodeAddress(address: string): Promise<Location> {
   if (!window.google) {
     throw new Error('Google Maps not loaded');
   }
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const geocoder = new google.maps.Geocoder();
     
     geocoder.geocode({ address }, (results, status) => {
@@ -143,14 +111,14 @@ export async function geocodeAddress(address: string): Promise<Location | null> 
           lng: location.lng(),
         });
       } else {
-        resolve(null);
+        reject(new Error(`Geocoding failed: ${status}`));
       }
     });
   });
 }
 
 /**
- * Calculate directions between two points
+ * Get directions between two points
  */
 export async function getDirections(
   origin: Location,
@@ -163,18 +131,18 @@ export async function getDirections(
 
   return new Promise((resolve, reject) => {
     const directionsService = new google.maps.DirectionsService();
-
+    
     directionsService.route(
       {
-        origin,
-        destination,
+        origin: new google.maps.LatLng(origin.lat, origin.lng),
+        destination: new google.maps.LatLng(destination.lat, destination.lng),
         travelMode,
       },
       (result, status) => {
-        if (status === google.maps.DirectionsStatus.OK && result) {
+        if (status === 'OK' && result) {
           resolve(result);
         } else {
-          reject(new Error(`Directions failed: ${status}`));
+          reject(new Error(`Directions request failed: ${status}`));
         }
       }
     );
@@ -182,28 +150,30 @@ export async function getDirections(
 }
 
 /**
- * Wait for Google Maps to load
+ * Wait for Google Maps to be ready
  */
-export function waitForGoogleMaps(timeout = 10000): Promise<void> {
+export function waitForGoogleMaps(timeout: number = 10000): Promise<void> {
   return new Promise((resolve, reject) => {
+    if (window.google && window.google.maps) {
+      resolve();
+      return;
+    }
+
     const startTime = Date.now();
-    
-    const checkGoogle = () => {
+    const checkInterval = setInterval(() => {
       if (window.google && window.google.maps) {
+        clearInterval(checkInterval);
         resolve();
       } else if (Date.now() - startTime > timeout) {
-        reject(new Error('Google Maps failed to load within timeout'));
-      } else {
-        setTimeout(checkGoogle, 100);
+        clearInterval(checkInterval);
+        reject(new Error('Google Maps failed to load'));
       }
-    };
-    
-    checkGoogle();
+    }, 100);
   });
 }
 
 /**
- * Get current location with high accuracy
+ * Get current location using browser's geolocation API
  */
 export function getCurrentLocation(): Promise<Location> {
   return new Promise((resolve, reject) => {
@@ -252,15 +222,17 @@ export function watchLocation(
     errorCallback,
     {
       enableHighAccuracy: true,
-      timeout: 5000,
+      timeout: 10000,
       maximumAge: 0,
     }
   );
 }
 
 /**
- * Stop watching location
+ * Clear location watch
  */
 export function clearLocationWatch(watchId: number): void {
-  navigator.geolocation.clearWatch(watchId);
+  if (navigator.geolocation) {
+    navigator.geolocation.clearWatch(watchId);
+  }
 }
