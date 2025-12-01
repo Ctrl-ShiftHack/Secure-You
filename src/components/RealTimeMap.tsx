@@ -45,39 +45,57 @@ export const RealTimeMap: React.FC<RealTimeMapProps> = ({
     if (!mapRef.current) return;
 
     const initMap = () => {
-      if (!window.google) return;
+      try {
+        if (!window.google || !window.google.maps) {
+          console.error('Google Maps not loaded');
+          return;
+        }
 
-      const map = new google.maps.Map(mapRef.current!, {
-        center: { lat: 23.8103, lng: 90.4125 }, // Dhaka center
-        zoom: 13,
-        zoomControl: true,
-        mapTypeControl: false,
-        scaleControl: false,
-        streetViewControl: false,
-        rotateControl: false,
-        fullscreenControl: true,
-        styles: [
-          {
-            featureType: 'poi.business',
-            stylers: [{ visibility: 'off' }]
-          },
-          {
-            featureType: 'poi.park',
-            elementType: 'labels.text',
-            stylers: [{ visibility: 'off' }]
-          }
-        ]
-      });
+        console.log('Initializing Google Map...');
 
-      mapInstanceRef.current = map;
-      infoWindowRef.current = new google.maps.InfoWindow();
-      setLoading(false);
+        const map = new google.maps.Map(mapRef.current!, {
+          center: { lat: 23.8103, lng: 90.4125 }, // Dhaka center
+          zoom: 13,
+          zoomControl: true,
+          mapTypeControl: false,
+          scaleControl: false,
+          streetViewControl: false,
+          rotateControl: false,
+          fullscreenControl: true,
+          disableDefaultUI: false,
+          styles: [
+            {
+              featureType: 'poi.business',
+              stylers: [{ visibility: 'off' }]
+            }
+          ]
+        });
+
+        mapInstanceRef.current = map;
+        infoWindowRef.current = new google.maps.InfoWindow();
+        
+        console.log('Map initialized successfully');
+        setLoading(false);
+      } catch (error) {
+        console.error('Error initializing map:', error);
+        setLoading(false);
+      }
     };
 
+    let attempts = 0;
+    const maxAttempts = 50; // 5 seconds max
+
     const checkGoogle = setInterval(() => {
+      attempts++;
+      
       if (window.google && window.google.maps) {
+        console.log('Google Maps API ready');
         clearInterval(checkGoogle);
         initMap();
+      } else if (attempts >= maxAttempts) {
+        console.error('Google Maps failed to load after 5 seconds');
+        clearInterval(checkGoogle);
+        setLoading(false);
       }
     }, 100);
 
@@ -193,57 +211,49 @@ export const RealTimeMap: React.FC<RealTimeMapProps> = ({
   useEffect(() => {
     if (!mapInstanceRef.current || !showFacilities) return;
 
+    console.log('Rendering emergency facilities...');
+
     // Clear existing markers
     facilityMarkersRef.current.forEach(marker => marker.setMap(null));
     facilityMarkersRef.current = [];
 
     EMERGENCY_FACILITIES.forEach((facility) => {
-      let icon: google.maps.Icon;
       let color: string;
+      let symbol: string;
 
       switch (facility.type) {
         case 'hospital':
           color = '#EF4444'; // Red
-          icon = {
-            path: 'M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm-1 15H9v-2h2v2zm0-4H9V7h2v6z',
-            fillColor: color,
-            fillOpacity: 1,
-            strokeColor: '#FFFFFF',
-            strokeWeight: 2,
-            scale: 1.5,
-            anchor: new google.maps.Point(12, 24),
-          } as google.maps.Icon;
+          symbol = 'H';
           break;
         case 'police':
           color = '#3B82F6'; // Blue
-          icon = {
-            path: 'M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z',
-            fillColor: color,
-            fillOpacity: 1,
-            strokeColor: '#FFFFFF',
-            strokeWeight: 2,
-            scale: 1.5,
-            anchor: new google.maps.Point(12, 24),
-          } as google.maps.Icon;
+          symbol = 'P';
           break;
         case 'fire':
-          color: '#F97316'; // Orange
-          icon = {
-            path: 'M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z',
-            fillColor: color,
-            fillOpacity: 1,
-            strokeColor: '#FFFFFF',
-            strokeWeight: 2,
-            scale: 1.3,
-            anchor: new google.maps.Point(12, 24),
-          } as google.maps.Icon;
+          color = '#F97316'; // Orange
+          symbol = 'F';
           break;
       }
 
+      // Use simple circle markers instead of complex paths
       const marker = new google.maps.Marker({
         position: facility.location,
         map: mapInstanceRef.current!,
-        icon,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 10,
+          fillColor: color,
+          fillOpacity: 1,
+          strokeColor: '#FFFFFF',
+          strokeWeight: 3,
+        },
+        label: {
+          text: symbol,
+          color: '#FFFFFF',
+          fontWeight: 'bold',
+          fontSize: '12px'
+        },
         title: facility.name,
         optimized: true
       });
@@ -369,16 +379,17 @@ export const RealTimeMap: React.FC<RealTimeMapProps> = ({
           <p className="text-sm text-muted-foreground">Loading map...</p>
         </div>
       </div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10" style={{ height }}>
+        <div className="text-center p-6 bg-card rounded-2xl shadow-lg">
+          <Loader2 className="w-12 h-12 mx-auto mb-3 animate-spin text-primary" />
+          <p className="text-base font-semibold text-foreground mb-1">Loading Map</p>
+          <p className="text-xs text-muted-foreground">Initializing Google Maps...</p>
+        </div>
+      </div>
     );
-  }
-
-  return (
-    <div className="relative" style={{ height }}>
-      <div ref={mapRef} className="w-full h-full" />
-
-      {/* Safety Alert */}
-      {showSafetyAlert && currentSafetyZone && (
-        <div className={`absolute top-4 left-4 right-4 p-4 rounded-lg shadow-lg z-10 ${
+  }     <div className={`absolute top-4 left-4 right-4 p-4 rounded-lg shadow-lg z-10 ${
           currentSafetyZone.safetyLevel === 'dangerous' ? 'bg-red-500' :
           currentSafetyZone.safetyLevel === 'unsafe' ? 'bg-orange-500' :
           'bg-yellow-500'
