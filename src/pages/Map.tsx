@@ -7,8 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import useProfile from "@/hooks/use-profile";
 import { getCurrentLocation, getGoogleMapsLink } from "@/lib/emergency";
 import { supabase } from "@/lib/supabase";
-import { SimpleMap } from "@/components/SimpleMap";
-import { reverseGeocode, geocodeAddress } from "@/lib/googleMapsServices";
+import GoogleMapModern from "@/components/GoogleMapModern";
+import { reverseGeocode, geocodeAddress, waitForGoogleMaps } from "@/lib/googleMapsModern";
 import type { EmergencyContact } from "@/types/database.types";
 
 function Map() {
@@ -37,9 +37,9 @@ function Map() {
         
         setContactsCount(contacts?.length || 0);
         
-        // Wait a bit for Google Maps to load, then geocode contact addresses
-        setTimeout(async () => {
-          if (contacts && contacts.length > 0 && window.google) {
+        // Wait for Google Maps to load, then geocode contact addresses
+        if (contacts && contacts.length > 0) {
+          waitForGoogleMaps(10000).then(async () => {
             const markers: Array<{ id: string; position: { lat: number; lng: number }; label: string }> = [];
             
             for (const contact of contacts) {
@@ -60,8 +60,10 @@ function Map() {
             }
             
             setContactMarkers(markers);
-          }
-        }, 2000); // Wait 2 seconds for Google Maps to load
+          }).catch(err => {
+            console.error('Google Maps failed to load for contact geocoding:', err);
+          });
+        }
       }
     };
     fetchContacts();
@@ -71,10 +73,7 @@ function Map() {
   const reverseGeocodeLocation = async (lat: number, lng: number) => {
     try {
       // Wait for Google Maps to be available
-      if (!window.google) {
-        console.log('Google Maps not loaded yet, using fallback');
-        throw new Error('Google Maps not loaded');
-      }
+      await waitForGoogleMaps(5000);
       
       const address = await reverseGeocode({ lat, lng });
       setAddress(address);
@@ -83,7 +82,12 @@ function Map() {
       // Fallback to OpenStreetMap if Google fails
       try {
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+          {
+            headers: {
+              'User-Agent': 'SecureYou Safety App'
+            }
+          }
         );
         const data = await response.json();
         if (data && data.display_name) {
@@ -199,16 +203,18 @@ function Map() {
             </div>
           )}
         </div>
-      </header>
-
-      {/* Map Component with Fallback */}
+      {/* Map Component - Modern Google Maps */}
       <div className="p-4">
-        <SimpleMap
+        <GoogleMapModern
           height="calc(100vh - 450px)"
           showCurrentLocation={true}
           onLocationUpdate={handleLocationUpdate}
           enableLiveTracking={liveTracking}
+          showTraffic={showTraffic}
           markers={showContacts ? contactMarkers : []}
+          zoom={15}
+        />
+      </div>rkers={showContacts ? contactMarkers : []}
         />
       </div>
 
