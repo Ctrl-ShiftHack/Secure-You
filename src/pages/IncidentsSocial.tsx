@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/dialog";
 import UserAvatar from "@/components/UserAvatar";
 
-const POSTS_PER_PAGE = 10;
+const POSTS_PER_PAGE = 15;
+const CACHE_TIME = 30000; // 30 seconds cache
 
 const IncidentsSocial = () => {
   const { t } = useI18n();
@@ -28,6 +29,7 @@ const IncidentsSocial = () => {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
+  const [lastFetch, setLastFetch] = useState(0);
   
   // Form state
   const navigate = useNavigate();
@@ -85,8 +87,14 @@ const IncidentsSocial = () => {
     };
   }, []);
 
-  const loadPosts = async (reset: boolean = false) => {
+  const loadPosts = useCallback(async (reset: boolean = false) => {
     if (loading) return;
+    
+    // Cache check - don't reload if recently fetched
+    const now = Date.now();
+    if (!reset && now - lastFetch < CACHE_TIME && posts.length > 0) {
+      return;
+    }
     
     setLoading(true);
     try {
@@ -95,6 +103,7 @@ const IncidentsSocial = () => {
       setPage(1);
       setHasMore(data.length >= POSTS_PER_PAGE);
       setShowNewPostsBanner(false);
+      setLastFetch(now);
     } catch (error) {
       console.error('Error loading posts:', error);
       toast({ 
@@ -105,7 +114,7 @@ const IncidentsSocial = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [loading, lastFetch, posts.length, toast, t]);
 
   const loadMorePosts = async () => {
     if (loading || !hasMore) return;

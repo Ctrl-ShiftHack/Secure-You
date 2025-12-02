@@ -21,83 +21,28 @@ export interface Place {
 }
 
 /**
- * Search for nearby places using Google Places API
+ * Search for nearby places - DEPRECATED
+ * Use emergencyFacilities.ts data instead
  */
 export async function searchNearbyPlaces(
   location: Location,
   type: string,
   radius: number = 5000
 ): Promise<Place[]> {
-  if (!window.google) {
-    throw new Error('Google Maps not loaded');
-  }
-
-  return new Promise((resolve, reject) => {
-    const service = new google.maps.places.PlacesService(
-      document.createElement('div')
-    );
-
-    const request = {
-      location: new google.maps.LatLng(location.lat, location.lng),
-      radius,
-      type: type,
-    };
-
-    service.nearbySearch(request, (results, status) => {
-      if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-        const places: Place[] = results
-          .filter((place) => place.geometry?.location && place.place_id)
-          .map((place) => {
-            const placeLat = place.geometry!.location!.lat();
-            const placeLng = place.geometry!.location!.lng();
-            const distance = calculateDistance(
-              location.lat,
-              location.lng,
-              placeLat,
-              placeLng
-            );
-
-            return {
-              id: place.place_id!,
-              name: place.name || 'Unknown',
-              address: place.vicinity || '',
-              location: {
-                lat: placeLat,
-                lng: placeLng,
-              },
-              distance,
-              rating: place.rating,
-              placeId: place.place_id,
-              types: place.types,
-            };
-          })
-          .sort((a, b) => (a.distance || 0) - (b.distance || 0));
-
-        resolve(places);
-      } else {
-        reject(new Error(`Places search failed: ${status}`));
-      }
-    });
-  });
+  console.warn('searchNearbyPlaces is deprecated - use emergencyFacilities.ts');
+  return Promise.resolve([]);
 }
 
 /**
- * Get detailed place information
+ * Get detailed place information - DEPRECATED
  */
 export async function getPlaceDetails(placeId: string): Promise<any> {
-  if (!window.google) {
-    throw new Error('Google Maps not loaded');
-  }
+  console.warn('getPlaceDetails is deprecated');
+  return Promise.resolve(null);
+}
 
-  return new Promise((resolve, reject) => {
-    const service = new google.maps.places.PlacesService(
-      document.createElement('div')
-    );
-
-    service.getDetails(
-      {
-        placeId,
-        fields: [
+/**
+ * Reverse geocode using Geocoding API
           'name',
           'formatted_address',
           'formatted_phone_number',
@@ -250,18 +195,50 @@ export async function findEmergencyFacilities(
   hospitals: Place[];
   policeStations: Place[];
   fireStations: Place[];
+/**
+ * Find emergency facilities - Using pre-loaded data
+ */
+export async function findEmergencyFacilities(
+  location: Location,
+  radius: number = 5000
+): Promise<{
+  hospitals: Place[];
+  policeStations: Place[];
+  fireStations: Place[];
 }> {
   try {
-    const [hospitals, policeStations, fireStations] = await Promise.all([
-      searchNearbyPlaces(location, 'hospital', radius),
-      searchNearbyPlaces(location, 'police', radius),
-      searchNearbyPlaces(location, 'fire_station', radius),
-    ]);
+    // Import emergency facilities data
+    const { findNearestFacilities } = await import('./emergencyFacilities');
+    
+    const hospitals = findNearestFacilities(location.lat, location.lng, 'hospital', 5);
+    const police = findNearestFacilities(location.lat, location.lng, 'police', 5);
+    const fire = findNearestFacilities(location.lat, location.lng, 'fire', 5);
 
     return {
-      hospitals: hospitals.slice(0, 5),
-      policeStations: policeStations.slice(0, 5),
-      fireStations: fireStations.slice(0, 5),
+      hospitals: hospitals.map(f => ({
+        id: f.id,
+        name: f.name,
+        address: f.address || '',
+        location: f.location,
+        distance: f.distance,
+        phoneNumber: f.phone
+      })),
+      policeStations: police.map(f => ({
+        id: f.id,
+        name: f.name,
+        address: f.address || '',
+        location: f.location,
+        distance: f.distance,
+        phoneNumber: f.phone
+      })),
+      fireStations: fire.map(f => ({
+        id: f.id,
+        name: f.name,
+        address: f.address || '',
+        location: f.location,
+        distance: f.distance,
+        phoneNumber: f.phone
+      }))
     };
   } catch (error) {
     console.error('Error finding emergency facilities:', error);
@@ -271,14 +248,7 @@ export async function findEmergencyFacilities(
       fireStations: [],
     };
   }
-}
-
-/**
- * Get estimated travel time
- */
-export function getEstimatedTime(
-  directionsResult: google.maps.DirectionsResult
-): string {
+}: string {
   if (!directionsResult.routes[0]) return '';
   
   const leg = directionsResult.routes[0].legs[0];
