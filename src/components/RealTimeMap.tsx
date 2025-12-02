@@ -373,14 +373,6 @@ export const RealTimeMap: React.FC<RealTimeMapProps> = ({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center bg-muted" style={{ height }}>
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 mx-auto mb-2 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Loading map...</p>
-        </div>
-      </div>
-  if (loading) {
-    return (
       <div className="flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10" style={{ height }}>
         <div className="text-center p-6 bg-card rounded-2xl shadow-lg">
           <Loader2 className="w-12 h-12 mx-auto mb-3 animate-spin text-primary" />
@@ -389,7 +381,16 @@ export const RealTimeMap: React.FC<RealTimeMapProps> = ({
         </div>
       </div>
     );
-  }     <div className={`absolute top-4 left-4 right-4 p-4 rounded-lg shadow-lg z-10 ${
+  }
+
+  return (
+    <div className="relative" style={{ height }}>
+      {/* Map Container */}
+      <div ref={mapRef} className="w-full h-full" />
+
+      {/* Safety Alert */}
+      {showSafetyAlert && currentSafetyZone && (
+        <div className={`absolute top-4 left-4 right-4 p-4 rounded-lg shadow-lg z-10 ${
           currentSafetyZone.safetyLevel === 'dangerous' ? 'bg-red-500' :
           currentSafetyZone.safetyLevel === 'unsafe' ? 'bg-orange-500' :
           'bg-yellow-500'
