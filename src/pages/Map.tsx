@@ -129,12 +129,13 @@ function Map() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Real-Time Map - Full Screen */}
-      <RealTimeMap
+      {/* Advanced Real-Time Map - Full Screen */}
+      <AdvancedRealTimeMap
         height="calc(100vh - 140px)"
         onLocationUpdate={handleLocationUpdate}
         showFacilities={true}
         showSafetyZones={true}
+        showTraffic={false}
       />
 
       {/* Bottom Action Bar */}
