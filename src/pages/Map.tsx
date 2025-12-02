@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import useProfile from "@/hooks/use-profile";
 import { supabase } from "@/lib/supabase";
-import RealTimeMap from "@/components/RealTimeMap";
+import AdvancedRealTimeMap from "@/components/AdvancedRealTimeMap";
 import { reverseGeocode, waitForGoogleMaps } from "@/lib/googleMapsModern";
 import type { EmergencyContact } from "@/types/database.types";
 
