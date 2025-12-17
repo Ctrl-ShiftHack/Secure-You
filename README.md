@@ -4,8 +4,11 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18.3-61dafb)](https://reactjs.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-Latest-3ECF8E)](https://supabase.com/)
+[![Expo](https://img.shields.io/badge/Expo-51.0-000020)](https://expo.dev/)
 
 **Your Safety, One Tap Away** - Emergency SOS alerts and live location sharing with trusted contacts.
+
+> **📱 NEW: Native Mobile App!** Check out the `expo-app/` folder for the Expo/React Native version with cloud-based APK builds (no Android Studio needed)!
 
 ---
 
@@ -64,10 +67,20 @@
 
 ## 📚 Documentation
 
-- **[EMERGENCY_FEATURES.md](./EMERGENCY_FEATURES.md)** - Complete emergency features documentation
-- **[START_HERE.md](./START_HERE.md)** - Quick start guide
-- **[deployment/](./deployment/)** - Deployment guides for Vercel, Netlify, Cloudflare, etc.
-- **[migrations/](./migrations/)** - Database migration files
+### Quick Links
+- **[⭐ COMPREHENSIVE_AUDIT_REPORT.md](./COMPREHENSIVE_AUDIT_REPORT.md)** - Complete project audit & analysis
+- **[🚀 REORGANIZATION_COMPLETE.md](./REORGANIZATION_COMPLETE.md)** - Code reorganization summary
+- **[📖 docs/](./docs/)** - All documentation organized
+  - **[guides/](./docs/guides/)** - 12 step-by-step guides (Quick Start, Deployment, Mobile Setup, etc.)
+  - **[reports/](./docs/reports/)** - 11 technical reports (Testing, Bugs, Code Quality)
+  - **[checklists/](./docs/checklists/)** - 3 pre-launch checklists
+- **[🗄️ backend/](./backend/)** - Database schemas & backend documentation
+- **[🔧 scripts/](./scripts/)** - Utility scripts (quick-launch, deployment)
+
+### Getting Started
+1. **New to SecureYou?** → Read [docs/guides/START_HERE.md](./docs/guides/START_HERE.md)
+2. **Quick Start** → Follow [docs/guides/QUICK_START.md](./docs/guides/QUICK_START.md)
+3. **Full Analysis** → Read [COMPREHENSIVE_AUDIT_REPORT.md](./COMPREHENSIVE_AUDIT_REPORT.md)
 
 ## Tech Stack
 

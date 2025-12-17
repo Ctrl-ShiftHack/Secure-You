@@ -186,16 +186,6 @@ export function formatDistance(distanceKm: number): string {
 }
 
 /**
- * Search for emergency facilities
- */
-export async function findEmergencyFacilities(
-  location: Location,
-  radius: number = 5000
-): Promise<{
-  hospitals: Place[];
-  policeStations: Place[];
-  fireStations: Place[];
-/**
  * Find emergency facilities - Using pre-loaded data
  */
 export async function findEmergencyFacilities(
@@ -248,7 +238,14 @@ export async function findEmergencyFacilities(
       fireStations: [],
     };
   }
-}: string {
+}
+
+/**
+ * Get estimated travel time
+ */
+export function getTravelTime(
+  directionsResult: google.maps.DirectionsResult
+): string {
   if (!directionsResult.routes[0]) return '';
   
   const leg = directionsResult.routes[0].legs[0];

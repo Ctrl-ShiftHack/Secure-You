@@ -129,54 +129,59 @@ export const sendSOSAlert = async (alert: SOSAlert): Promise<void> => {
 
     // Send notifications to each emergency contact
     const notificationPromises = alert.contacts.map(async (contact) => {
-      // Format SMS message
-      const smsMessage = `🚨 EMERGENCY ALERT from ${user?.user.user_metadata?.full_name || 'SecureYou User'}!\n\n` +
-        `Time: ${timestamp}\n` +
-        (location ? `Location: ${mapLink}\n` : 'Location: Not available\n') +
-        `\nThis is an automated emergency alert. Please check on them immediately!`;
-
-      // Format email
-      const emailSubject = `🚨 EMERGENCY ALERT - Immediate Action Required`;
-      const emailBody = `
-        <h2 style="color: #FF6B6B;">🚨 EMERGENCY ALERT</h2>
-        <p><strong>${user?.user.user_metadata?.full_name || 'Someone'}</strong> has triggered an emergency SOS alert and needs immediate help!</p>
-        
-        <h3>Details:</h3>
-        <ul>
-          <li><strong>Time:</strong> ${timestamp}</li>
-          <li><strong>Location:</strong> ${location ? `<a href="${mapLink}">View on Google Maps</a>` : 'Not available'}</li>
-          ${alert.message ? `<li><strong>Message:</strong> ${alert.message}</li>` : ''}
-        </ul>
-        
-        <p style="color: #FF6B6B; font-weight: bold;">Please check on them immediately or contact local emergency services.</p>
-        
-        <p style="color: #666; font-size: 12px;">This is an automated message from SecureYou Emergency Safety App.</p>
-      `;
-
-      // In production, you would integrate with:
-      // 1. Twilio for SMS: https://www.twilio.com/docs/sms
-      // 2. SendGrid/Mailgun for email
-      // 3. Firebase Cloud Messaging for push notifications
-      // 4. Supabase Edge Functions to handle server-side sending
-
-      console.log(`[SOS Alert] Sending to ${contact.name}:`, {
-        phone: contact.phone_number,
-        email: contact.email,
-        sms: smsMessage.substring(0, 50) + '...',
-      });
-
-      // Store notification attempt in database
       try {
+        // Call Supabase Edge Function to send SMS & Email
+        const { data, error } = await supabase.functions.invoke('send-sos-alert', {
+          body: {
+            contactId: contact.id,
+            contactName: contact.name,
+            phoneNumber: contact.phone_number,
+            email: contact.email,
+            userName: user?.user.user_metadata?.full_name || 'SecureYou User',
+            timestamp,
+            location: location ? {
+              latitude: location.latitude,
+              longitude: location.longitude,
+              mapLink: mapLink || '',
+            } : null,
+            message: alert.message,
+          },
+        });
+
+        if (error) {
+          console.error(`[SOS Alert] Error sending to ${contact.name}:`, error);
+          // Log failed notification
+          await supabase.from('notifications').insert([{
+            user_id: user?.user.id || '',
+            contact_id: contact.id,
+            type: 'sos',
+            message: `Failed to send: ${error.message}`,
+            status: 'failed',
+            sent_at: new Date().toISOString(),
+          }] as any);
+        } else {
+          console.log(`[SOS Alert] Successfully sent to ${contact.name}:`, data);
+          // Log successful notification
+          await supabase.from('notifications').insert([{
+            user_id: user?.user.id || '',
+            contact_id: contact.id,
+            type: 'sos',
+            message: `SMS: ${data?.results?.sms?.sent ? 'Sent' : 'Failed'}, Email: ${data?.results?.email?.sent ? 'Sent' : 'Failed'}`,
+            status: 'sent',
+            sent_at: new Date().toISOString(),
+          }] as any);
+        }
+      } catch (error) {
+        console.error(`[SOS Alert] Exception sending to ${contact.name}:`, error);
+        // Log exception
         await supabase.from('notifications').insert([{
           user_id: user?.user.id || '',
           contact_id: contact.id,
           type: 'sos',
-          message: smsMessage,
-          status: 'sent',
+          message: `Exception: ${error}`,
+          status: 'failed',
           sent_at: new Date().toISOString(),
         }] as any);
-      } catch (error) {
-        console.error('Error logging notification:', error);
       }
     });
 
