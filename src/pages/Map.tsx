@@ -1,4 +1,4 @@
-import { MapPin, Share2, Send, Loader2, Users } from "lucide-react";
+import { MapPin, Send, Loader2, Users, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { BottomNav } from "@/components/BottomNav";
@@ -18,6 +18,9 @@ function Map() {
   const [sharing, setSharing] = useState(false);
   const [address, setAddress] = useState<string>("Getting location...");
   const [contactsCount, setContactsCount] = useState(0);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [locationWaited, setLocationWaited] = useState(false);
+  const [requestingLocation, setRequestingLocation] = useState(false);
 
   // Get emergency contacts count
   useEffect(() => {
@@ -33,6 +36,12 @@ function Map() {
       }
     };
     fetchContacts();
+  }, []);
+
+  // Show guidance if location takes too long
+  useEffect(() => {
+    const timer = setTimeout(() => setLocationWaited(true), 8000);
+    return () => clearTimeout(timer);
   }, []);
 
   // Reverse geocode location to address
@@ -67,7 +76,35 @@ function Map() {
   // Handle location update from map
   const handleLocationUpdate = (newLocation: { lat: number; lng: number }) => {
     setLocation(newLocation);
+    setLocationError(null);
+    setLocationWaited(false);
     reverseGeocodeLocation(newLocation.lat, newLocation.lng);
+  };
+
+  const requestOneTimeLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError("Location not supported on this device.");
+      return;
+    }
+
+    setRequestingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const coords = { lat: latitude, lng: longitude };
+        setLocation(coords);
+        setLocationError(null);
+        setLocationWaited(false);
+        reverseGeocodeLocation(coords.lat, coords.lng);
+        setRequestingLocation(false);
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        setLocationError(error?.message || 'Could not get location. Please enable GPS.');
+        setRequestingLocation(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
+    );
   };
 
   const handleShareLocation = async () => {
@@ -128,7 +165,30 @@ function Map() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col relative">
+      {(!location && (locationWaited || locationError)) && (
+        <div className="absolute inset-x-4 top-4 z-20 bg-card border border-border shadow-lg rounded-xl p-4 flex items-start gap-3">
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <AlertCircle className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0 space-y-1">
+            <p className="text-sm font-semibold text-foreground">Enable location to load the map</p>
+            <p className="text-xs text-muted-foreground">Turn on GPS, allow permission, then tap Retry.</p>
+            {locationError && (
+              <p className="text-xs text-destructive">{locationError}</p>
+            )}
+            <div className="flex gap-2 pt-1">
+              <Button size="sm" variant="outline" onClick={() => navigate('/contacts')}>
+                Manage Contacts
+              </Button>
+              <Button size="sm" onClick={requestOneTimeLocation} disabled={requestingLocation}>
+                {requestingLocation ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Retry'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Advanced Real-Time Map - Full Screen */}
       <AdvancedRealTimeMap
         height="calc(100vh - 140px)"

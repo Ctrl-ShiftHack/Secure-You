@@ -76,6 +76,10 @@ const ContactsNew = () => {
     
     setLoading(true);
     try {
+      // Fail fast if Supabase hangs
+      const abortController = new AbortController();
+      const timeoutId = setTimeout(() => abortController.abort(), 12000);
+
       await contactsService.createContact({
         user_id: user.id,
         name: sanitizeText(trimmedName),
@@ -83,7 +87,9 @@ const ContactsNew = () => {
         email: trimmedEmail ? normalizeEmail(trimmedEmail) : null,
         relationship: sanitizeText(relation.trim()) || null,
         is_primary: isPrimary,
-      });
+      }, abortController.signal);
+
+      clearTimeout(timeoutId);
       
       toast({
         title: "Contact Added",
@@ -93,9 +99,13 @@ const ContactsNew = () => {
       navigate("/contacts");
     } catch (error: any) {
       console.error('Error creating contact:', error);
+      const message = error?.name === 'AbortError'
+        ? 'Request timed out. Please check your connection and try again.'
+        : error?.message || 'Could not add contact. Please try again.';
+
       toast({
         title: "Error",
-        description: error?.message || "Could not add contact. Please try again.",
+        description: message,
         variant: "destructive"
       });
     } finally {

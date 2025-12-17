@@ -76,7 +76,11 @@ const Incidents = () => {
   const loadPosts = async () => {
     try {
       setLoading(true);
-      const data = await postsService.getPosts(50);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+      const data = await postsService.getPosts(50, 0, controller.signal);
+      clearTimeout(timeoutId);
       setPosts(data || []);
     } catch (error) {
       console.error('Error loading posts:', error);
@@ -86,7 +90,9 @@ const Incidents = () => {
       if (error instanceof Error && !error.message.includes('view')) {
         toast({ 
           title: t("incidents.errorLoading") || "Could not load posts", 
-          description: "Please check your connection",
+          description: error.name === 'AbortError' 
+            ? "Request timed out. Please check your connection"
+            : "Please check your connection",
           variant: "destructive" 
         });
       }

@@ -202,7 +202,10 @@ export const contactsService = {
     return data as EmergencyContact;
   },
 
-  async createContact(contact: Omit<EmergencyContact, 'id' | 'created_at'>) {
+  async createContact(
+    contact: Omit<EmergencyContact, 'id' | 'created_at'>,
+    abortSignal?: AbortSignal
+  ) {
     try {
       // Validate required fields
       if (!contact.name || !contact.phone_number || !contact.user_id) {
@@ -215,6 +218,7 @@ export const contactsService = {
           ...contact,
           updated_at: new Date().toISOString()
         }])
+        .abortSignal(abortSignal)
         .select()
         .single();
       
@@ -397,13 +401,14 @@ export const incidentsService = {
 
 // Social Feed - Posts Service
 export const postsService = {
-  async getPosts(limit = 50, offset = 0) {
+  async getPosts(limit = 50, offset = 0, abortSignal?: AbortSignal) {
     try {
       const { data, error } = await supabase
         .from('posts_with_counts')
         .select('*')
         .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1);
+        .range(offset, offset + limit - 1)
+        .abortSignal(abortSignal);
       
       if (error) {
         console.error('Supabase error:', error);
