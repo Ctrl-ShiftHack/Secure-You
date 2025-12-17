@@ -140,8 +140,22 @@ const Setup = () => {
         
         // Save valid contacts
         const validContacts = emergencyContacts.filter(c => c.name.trim() && c.phone.trim());
+
+        if (validContacts.length === 0) {
+          toast({
+            title: "Add an emergency contact",
+            description: "Please add at least one contact so we can notify someone in an emergency.",
+            variant: "destructive"
+          });
+          setSaving(false);
+          return;
+        }
         
-        for (const contact of validContacts) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 12000);
+        
+        for (let i = 0; i < validContacts.length; i++) {
+          const contact = validContacts[i];
           const phoneError = getPhoneErrorMessage(contact.phone);
           if (phoneError) {
             toast({
@@ -150,6 +164,7 @@ const Setup = () => {
               variant: "destructive"
             });
             setSaving(false);
+            clearTimeout(timeoutId);
             return;
           }
           
@@ -159,8 +174,11 @@ const Setup = () => {
             phone_number: normalizeBDPhone(contact.phone),
             email: contact.email ? normalizeEmail(contact.email) : null,
             relationship: contact.relationship ? sanitizeText(contact.relationship) : null,
-          });
+            is_primary: i === 0,
+          }, controller.signal);
         }
+
+        clearTimeout(timeoutId);
         
         console.log('✅ Emergency contacts saved!');
         
@@ -175,7 +193,9 @@ const Setup = () => {
         console.error('❌ Error saving contacts:', error);
         toast({
           title: "Error",
-          description: error?.message || "Failed to save emergency contacts. You can add them later from Contacts page.",
+          description: error?.name === 'AbortError' 
+            ? "Saving contacts timed out. Please check your connection and try again." 
+            : error?.message || "Failed to save emergency contacts. You can add them later from Contacts page.",
           variant: "destructive"
         });
         // Still allow navigation to dashboard
