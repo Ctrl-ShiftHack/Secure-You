@@ -27,19 +27,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   // Check if user needs to complete profile setup
-  // Skip this check if already on setup page or verify-email page
-  const isOnSetupPage = location.pathname === '/setup';
-  const isOnVerifyPage = location.pathname === '/verify-email';
-  
-  if (!isOnSetupPage && !isOnVerifyPage && profile) {
-    // Check if profile is incomplete (new user)
-    const hasMinimalInfo = profile.full_name && profile.phone_number;
-    
-    if (!hasMinimalInfo) {
-      console.log('🔄 Redirecting to setup - incomplete profile');
-      return <Navigate to="/setup" replace />;
-    }
-  }
+  // NOTE: We no longer hard-redirect to /setup. Incomplete profiles are allowed to proceed
+  // so users aren’t stuck in a loop before launch. Consider adding a soft reminder instead.
 
   return <>{children}</>;
 };

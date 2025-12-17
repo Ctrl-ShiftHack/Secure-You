@@ -24,6 +24,45 @@ type ReactionInsert = Omit<PostReaction, 'id' | 'created_at'>;
 type CommentInsert = Omit<PostComment, 'id' | 'created_at' | 'updated_at'>;
 type CommentUpdate = Partial<Omit<PostComment, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'post_id'>>;
 
+const supabaseConfigured = Boolean(
+  import.meta.env.VITE_SUPABASE_URL &&
+  import.meta.env.VITE_SUPABASE_ANON_KEY &&
+  !String(import.meta.env.VITE_SUPABASE_URL).includes('placeholder')
+);
+
+const offlinePosts: PostWithCounts[] = [
+  {
+    id: 'offline-1',
+    created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+    user_id: 'offline-user-1',
+    content: 'Test incident feed is working. This is a demo post available when Supabase is offline.',
+    image_url: null,
+    location: { address: 'Mirpur, Dhaka (demo)' },
+    visibility: 'public',
+    user_name: 'SecureYou Demo',
+    user_avatar: null,
+    reaction_count: 3,
+    comment_count: 1,
+    user_has_reacted: false,
+  },
+  {
+    id: 'offline-2',
+    created_at: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
+    user_id: 'offline-user-2',
+    content: 'Recent incidents will appear here once the database connection is configured.',
+    image_url: null,
+    location: { address: 'Gulshan, Dhaka (demo)' },
+    visibility: 'public',
+    user_name: 'Community Update',
+    user_avatar: null,
+    reaction_count: 1,
+    comment_count: 0,
+    user_has_reacted: false,
+  }
+];
+
 // Profile Service
 export const profileService = {
   async getProfile(userId: string) {
@@ -403,6 +442,11 @@ export const incidentsService = {
 export const postsService = {
   async getPosts(limit = 50, offset = 0, abortSignal?: AbortSignal) {
     try {
+      if (!supabaseConfigured) {
+        console.warn('Supabase is not configured. Returning offline demo posts.');
+        return offlinePosts;
+      }
+
       const { data, error } = await supabase
         .from('posts_with_counts')
         .select('*')
@@ -427,6 +471,10 @@ export const postsService = {
   },
 
   async getPost(postId: string) {
+    if (!supabaseConfigured) {
+      return offlinePosts.find((post) => post.id === postId) || offlinePosts[0];
+    }
+
     const { data, error } = await supabase
       .from('posts_with_counts')
       .select('*')
@@ -449,6 +497,10 @@ export const postsService = {
   },
 
   async createPost(post: PostInsert) {
+    if (!supabaseConfigured) {
+      throw new Error('Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to share incidents.');
+    }
+
     const { data, error } = await supabase
       .from('incident_posts')
       .insert([post])
@@ -460,6 +512,10 @@ export const postsService = {
   },
 
   async updatePost(postId: string, updates: PostUpdate) {
+    if (!supabaseConfigured) {
+      throw new Error('Supabase is not configured. Unable to update posts.');
+    }
+
     const { data, error } = await supabase
       .from('incident_posts')
       .update(updates)
@@ -472,6 +528,10 @@ export const postsService = {
   },
 
   async deletePost(postId: string) {
+    if (!supabaseConfigured) {
+      throw new Error('Supabase is not configured. Unable to delete posts.');
+    }
+
     // Soft delete
     const { data, error } = await supabase
       .from('incident_posts')
@@ -485,6 +545,10 @@ export const postsService = {
   },
 
   async hardDeletePost(postId: string) {
+    if (!supabaseConfigured) {
+      throw new Error('Supabase is not configured. Unable to delete posts.');
+    }
+
     // Hard delete (removes from database)
     const { error } = await supabase
       .from('incident_posts')

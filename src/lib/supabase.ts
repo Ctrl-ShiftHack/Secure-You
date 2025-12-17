@@ -28,7 +28,7 @@ export const supabase = createClient<Database>(cleanUrl, anonKey, {
     // Production redirect URLs
     flowType: 'pkce',
     redirectTo: typeof window !== 'undefined' 
-      ? `${window.location.origin}/setup` 
+      ? `${window.location.origin}/login`
       : undefined,
   },
   global: {

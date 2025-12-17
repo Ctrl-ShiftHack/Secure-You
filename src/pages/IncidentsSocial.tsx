@@ -25,11 +25,17 @@ const CACHE_TIME = 30000; // 30 seconds cache
 const IncidentsSocial = () => {
   const { t } = useI18n();
   const { user } = useAuth();
+  const supabaseConfigured = Boolean(
+    import.meta.env.VITE_SUPABASE_URL &&
+    import.meta.env.VITE_SUPABASE_ANON_KEY &&
+    !String(import.meta.env.VITE_SUPABASE_URL).includes('placeholder')
+  );
   const [posts, setPosts] = useState<PostWithCounts[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
   const [lastFetch, setLastFetch] = useState(0);
+  const [loadError, setLoadError] = useState<string | null>(null);
   
   // Form state
   const navigate = useNavigate();
@@ -104,8 +110,10 @@ const IncidentsSocial = () => {
       setHasMore(data.length >= POSTS_PER_PAGE);
       setShowNewPostsBanner(false);
       setLastFetch(now);
+      setLoadError(null);
     } catch (error) {
       console.error('Error loading posts:', error);
+      setLoadError(error instanceof Error ? error.message : 'Failed to load incidents');
       toast({ 
         title: t("incidents.errorLoad") || "Error", 
         description: "Failed to load posts",
@@ -318,6 +326,26 @@ const IncidentsSocial = () => {
           </Button>
         </div>
       </div>
+
+      {!supabaseConfigured && (
+        <div className="max-w-2xl mx-auto px-4 pt-4">
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-3 text-sm">
+            Showing demo incidents because Supabase credentials are missing. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable live data.
+          </div>
+        </div>
+      )}
+
+      {loadError && (
+        <div className="max-w-2xl mx-auto px-4 pt-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 mt-0.5" />
+            <div>
+              <p className="font-semibold">Could not refresh incidents</p>
+              <p className="text-xs text-red-700/80">{loadError}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* New Posts Banner */}
       {showNewPostsBanner && (

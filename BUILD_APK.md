@@ -14,6 +14,24 @@
    - Download SDK Platform-Tools
    - Add to PATH environment variable
 
+## Capacitor Quick Start (Android Studio Friendly)
+
+```powershell
+# 1) Install dependencies
+npm install
+
+# 2) Build web assets
+npm run build
+
+# 3) Sync Capacitor Android platform
+npm run android:sync
+
+# 4) Open Android Studio (launches the android/ project)
+npm run android:open
+```
+
+> Make sure your `.env` is set (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_GOOGLE_MAPS_API_KEY) **before** running the build so web assets include the correct keys.
+
 ## Quick Build (No Android Studio Required)
 
 ### Option 1: Build APK with npm script

@@ -28,6 +28,11 @@ import {
 const Incidents = () => {
   const { t } = useI18n();
   const { user } = useAuth();
+  const supabaseConfigured = Boolean(
+    import.meta.env.VITE_SUPABASE_URL &&
+    import.meta.env.VITE_SUPABASE_ANON_KEY &&
+    !String(import.meta.env.VITE_SUPABASE_URL).includes('placeholder')
+  );
   const [posts, setPosts] = useState<PostWithCounts[]>([]);
   const [loading, setLoading] = useState(false);
   
@@ -354,6 +359,11 @@ const Incidents = () => {
       <header className="py-4">
         <h1 className="text-xl font-bold text-foreground">{t("incidents.title") || "Community Feed"}</h1>
         <p className="text-sm text-muted-foreground">{t("incidents.subtitle") || "Share incidents and stay informed"}</p>
+        {!supabaseConfigured && (
+          <p className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2">
+            Showing demo incidents because Supabase credentials are missing. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable live updates.
+          </p>
+        )}
       </header>
 
       {/* Post composer */}

@@ -28,12 +28,30 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Google Maps API - Core functionality only -->
+    <!-- Google Maps API (loaded dynamically with env key) -->
     <script>
-      window.GOOGLE_MAPS_API_KEY = 'AIzaSyCrQBZKKls7LfWo3MbY2sAt37t0f_eaBnU';
-    </script>
-    <script async defer
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCrQBZKKls7LfWo3MbY2sAt37t0f_eaBnU&libraries=geometry&v=weekly&loading=async">
+      (function loadGoogleMaps() {
+        const apiKey = "%VITE_GOOGLE_MAPS_API_KEY%";
+        if (!apiKey || apiKey === "your-google-maps-api-key") {
+          console.warn("Google Maps API key is missing. Map features are disabled until VITE_GOOGLE_MAPS_API_KEY is set.");
+          return;
+        }
+
+        if (document.querySelector('script[data-google-maps-loader="true"]')) {
+          return; // Script already injected
+        }
+
+        const script = document.createElement("script");
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry&v=weekly&loading=async`;
+        script.async = true;
+        script.defer = true;
+        script.setAttribute("data-google-maps-loader", "true");
+        script.onerror = () => console.error("Failed to load Google Maps API script. Check your API key and referrer settings.");
+        document.head.appendChild(script);
+
+        // Expose for runtime checks
+        window.GOOGLE_MAPS_API_KEY = apiKey;
+      })();
     </script>
 
     <!-- Open Graph Tags -->

@@ -51,6 +51,15 @@ export const AdvancedRealTimeMap: React.FC<AdvancedRealTimeMapProps> = ({
   const [speed, setSpeed] = useState<number>(0);
   const [heading, setHeading] = useState<number>(0);
 
+  // Fail fast if API key is missing so users see a helpful error instead of a blank map
+  useEffect(() => {
+    const hasKey = Boolean(import.meta.env.VITE_GOOGLE_MAPS_API_KEY || (window as any).GOOGLE_MAPS_API_KEY);
+    if (!hasKey) {
+      setMapError('Google Maps API key is missing. Add VITE_GOOGLE_MAPS_API_KEY to your environment to enable the map.');
+      setLoading(false);
+    }
+  }, []);
+
   // Wait for Google Maps to load
   const waitForGoogleMaps = useCallback((): Promise<void> => {
     return new Promise((resolve, reject) => {
@@ -79,6 +88,11 @@ export const AdvancedRealTimeMap: React.FC<AdvancedRealTimeMapProps> = ({
   // Initialize map
   useEffect(() => {
     if (!mapRef.current) return;
+
+    const hasKey = Boolean(import.meta.env.VITE_GOOGLE_MAPS_API_KEY || (window as any).GOOGLE_MAPS_API_KEY);
+    if (!hasKey) {
+      return; // Already handled by the error state
+    }
 
     const initMap = async () => {
       try {
